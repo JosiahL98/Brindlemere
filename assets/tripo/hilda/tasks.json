@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:42:54.841Z",
+    "kind": "text",
+    "task_id": "a0e253eb-f8da-4723-84e8-e6f1f36d71f8",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the village baker, a slim woman in her thirties. Blonde hair in a bun, freckles, green eyes, a dusting of flour on her cheeks. A red wool dress with rolled sleeves and an off-white apron dusted with flour, plain shoes. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:42:59.331Z",
+    "kind": "rigcheck",
+    "task_id": "14d0ae0c-a815-440c-87af-abef9a976fd4",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "a0e253eb-f8da-4723-84e8-e6f1f36d71f8"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:43:10.132Z",
+    "kind": "rig",
+    "task_id": "3d73fcc1-3779-46c6-84c8-62325c3f85fa",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "a0e253eb-f8da-4723-84e8-e6f1f36d71f8",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:43:18.453Z",
+    "kind": "animate",
+    "task_id": "373e319b-db5e-4e8c-9234-7c1711241f55",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3d73fcc1-3779-46c6-84c8-62325c3f85fa",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]

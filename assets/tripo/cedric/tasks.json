@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:41:31.224Z",
+    "kind": "text",
+    "task_id": "4db9d1e8-04cd-4dbc-83f3-6eac8e50a2d3",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the village merchant, a well-fed man in his forties. Short black hair, a neat black moustache, brown eyes, a shrewd smile. A purple wool tunic with gold trim, a matching purple cap, grey trousers, a leather belt with a coin purse, leather shoes. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:41:35.707Z",
+    "kind": "rigcheck",
+    "task_id": "b4d809ae-f3a6-4600-9afd-3e2832926ba3",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "4db9d1e8-04cd-4dbc-83f3-6eac8e50a2d3"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:41:43.340Z",
+    "kind": "rig",
+    "task_id": "3f2f9538-96aa-4608-98b0-5a62d8967d12",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "4db9d1e8-04cd-4dbc-83f3-6eac8e50a2d3",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:41:51.570Z",
+    "kind": "animate",
+    "task_id": "fdac0187-b684-47a5-bbb8-f7a0d29ea1f6",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3f2f9538-96aa-4608-98b0-5a62d8967d12",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]

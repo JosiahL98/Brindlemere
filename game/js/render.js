@@ -280,7 +280,9 @@ function renderWorld(map, cam, env, sprites, t) {
     const spr = s.spr, res = spr.res || 1;
     const hx = s.x - cx, hz = s.z - cz, hd = Math.hypot(hx, hz);
     if (hd < 4) continue;
-    const nx = hx / hd, nz = hz / hd; // card normal, pointing away from the camera
+    // Card normal, pointing away from the camera: straight at it, or for a turning prop, the
+    // fixed direction its current view was rendered from.
+    const nx = s.face === undefined ? hx / hd : -Math.cos(s.face), nz = s.face === undefined ? hz / hd : -Math.sin(s.face);
     // Corners: across the card (u) from -ax to w-ax pixels, up it (v) from -(h-ay) to ay.
     const u0 = -spr.ax / res, u1 = (spr.w - spr.ax) / res, v0 = -(spr.h - spr.ay) / res, v1 = spr.ay / res;
     let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9, behind = false, depth = 0, near = 1e9;

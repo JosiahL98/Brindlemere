@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:38:18.285Z",
+    "kind": "text",
+    "task_id": "74c9ef88-a581-4e25-86de-58427b10be95",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the village's retired adventurer, a grizzled old soldier in his sixties. Bald head, a full grey beard, a black eye-patch over his left eye and a scar across his cheek, a stern weathered face. A worn brown leather tunic over grey woollen trousers, a rust-red sash and scuffed boots. He holds a wooden tankard of ale in his right hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:38:22.686Z",
+    "kind": "rigcheck",
+    "task_id": "081fd809-6adf-4374-87b1-427fd1765e00",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "74c9ef88-a581-4e25-86de-58427b10be95"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:38:33.315Z",
+    "kind": "rig",
+    "task_id": "0d663b41-2a79-4ed7-96ec-f4fd6152c38b",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "74c9ef88-a581-4e25-86de-58427b10be95",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:38:42.113Z",
+    "kind": "animate",
+    "task_id": "1a8abd14-2626-4cbf-b224-d0d77aed580e",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "0d663b41-2a79-4ed7-96ec-f4fd6152c38b",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]

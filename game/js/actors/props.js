@@ -505,6 +505,9 @@ defProp('pew', {
 // facing in the world; round ones (trees, barrels, wells, lamps) use a single view.
 const TURNING_PROPS = new Set(['stall', 'bench', 'noticeboard', 'sign', 'forge', 'anvil', 'weaponrack', 'crate', 'cart', 'dummy',
   'signpost', 'grave', 'waterwheel', 'boat', 'scarecrow', 'woodpile', 'bed', 'table', 'chest', 'altar', 'pew']);
+// Turning props are drawn from 16 directions, each on a card that keeps the orientation it was
+// rendered from, so a cart stays put in the world and only changes view as you walk round it.
+const PROP_ROTS = 16, PROP_STEP = Math.PI * 2 / PROP_ROTS;
 const _propCache = new Map(), _propQueue = new Map();
 let _propSyncUsed = false;
 function propBeginFrame() { _propSyncUsed = false; }
@@ -512,7 +515,7 @@ function renderProp(type, v, f, n, rot) {
   const P = PROPS[type];
   const s = new Shape();
   P.build(s, v, f, !!n);
-  const spr = renderSprite(s, rot * Math.PI / 4, { res: P.res });
+  const spr = renderSprite(s, rot * PROP_STEP, { res: P.res });
   delete spr.depth;
   return spr;
 }
@@ -525,8 +528,8 @@ function propSprite(type, variant, frame, night, rot = 0) {
   if (spr) return spr;
   // One new view per frame is rendered on the spot; others show the nearest finished angle
   // while they wait their turn in idle time.
-  for (const d of [1, -1, 2, -2, 3, -3, 4]) {
-    const near = !_propSyncUsed || d > 4 ? null : _propCache.get(`${type}|${v}|${f}|${n}|${(rot + d + 8) % 8}`);
+  for (const d of [1, -1, 2, -2, 3, -3, 4, -4]) {
+    const near = !_propSyncUsed ? null : _propCache.get(`${type}|${v}|${f}|${n}|${(rot + d + PROP_ROTS) % PROP_ROTS}`);
     if (near) { _propQueue.set(key, [type, v, f, n, rot]); return near; }
   }
   _propSyncUsed = true;
@@ -565,12 +568,14 @@ function gatherPropSprites(map, t = 0, night = 0, camX, camZ) {
     if (p.taken) continue;
     const P = PROPS[p.type];
     if (!P) continue;
-    let rot = 0;
+    let rot = 0, face;
     if (camX !== undefined && TURNING_PROPS.has(p.type)) {
-      const d = Math.atan2(camZ - p.z, camX - p.x) - propFacing(map, p);
-      rot = ((Math.round(Math.atan2(Math.sin(d), Math.cos(d)) / (Math.PI / 4)) % 8) + 8) % 8;
+      const facing = propFacing(map, p), d = Math.atan2(camZ - p.z, camX - p.x) - facing;
+      const k = Math.round(Math.atan2(Math.sin(d), Math.cos(d)) / PROP_STEP);
+      rot = ((k % PROP_ROTS) + PROP_ROTS) % PROP_ROTS;
+      face = facing + k * PROP_STEP; // the way this view looks at the prop from: the card's fixed orientation
     }
-    out.push({ spr: propSprite(p.type, propVariant(p), Math.floor(t * 6), night > 0.45, rot), x: p.x, z: p.z, prop: p });
+    out.push({ spr: propSprite(p.type, propVariant(p), Math.floor(t * 6), night > 0.45, rot), x: p.x, z: p.z, prop: p, face });
   }
   return out;
 }

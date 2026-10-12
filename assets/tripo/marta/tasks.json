@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:39:47.815Z",
+    "kind": "text",
+    "task_id": "2988c47f-bbf6-43f5-b767-2bf6888d307d",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the innkeeper, a sturdy woman in her forties. Red hair tied up in a bun under an off-white linen kerchief, freckles, blue eyes, a friendly but no-nonsense face. A green wool dress with rolled sleeves, an off-white apron and a brown skirt, plain shoes. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:39:52.243Z",
+    "kind": "rigcheck",
+    "task_id": "14f62f6a-3c5e-4997-a919-df968b8aade5",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "2988c47f-bbf6-43f5-b767-2bf6888d307d"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:39:59.826Z",
+    "kind": "rig",
+    "task_id": "5ffab0f9-18ff-48cd-bd88-7ffe16deb5ad",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "2988c47f-bbf6-43f5-b767-2bf6888d307d",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:40:09.334Z",
+    "kind": "animate",
+    "task_id": "0b9d9bbc-2802-4dd8-a2de-f1d62237fe47",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "5ffab0f9-18ff-48cd-bd88-7ffe16deb5ad",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]

@@ -14,7 +14,11 @@ function bakedDef(id, look) {
   const B = BAKED[id];
   const actions = {};
   for (const [name, a] of Object.entries(B.actions)) actions[name] = { frames: a.frames, fps: a.fps, loop: a.loop !== false, hit: a.hit, travel: a.travel, pose: () => ({}) };
-  return { id, look, baked: true, res: B.res, height: B.height, actions, build: () => {}, portrait: null };
+  // Villagers baked with fewer moves (an innkeeper who never leaves the bar) use their idle loop
+  // for anything else the game asks of them.
+  const alias = {};
+  for (const name of ['talk', 'walk', 'work']) if (!actions[name]) { actions[name] = actions.idle; alias[name] = 'idle'; }
+  return { id, look, baked: true, res: B.res, height: B.height, actions, alias, build: () => {}, portrait: null };
 }
 
 // Unpacks every baked villager into the sprite cache. Resolves once all are ready.

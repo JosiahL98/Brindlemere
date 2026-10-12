@@ -24,7 +24,7 @@ const cfg = {
     // roll: extra turn about the forearm so the palm faces left (inward); mirror: the model came
     // out as a left hand. Both checked against full-size renders (--preview --big).
     empty: { url: T('fp-empty'), set: 'fist', free: true, roll: 90, elbow: [0, -0.45, 0], hand: [0, 0.38, 0], tip: [-0.15, 0.38, 0] },
-    club: { url: '/assets/tripo/fp-club/model-2.glb', set: 'swing', poses: 'chop', free: true, roll: 90, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], tip: [-0.01, 0.48, 0.09] },
+    club: { url: '/assets/tripo/fp-club/model-2.glb', set: 'swing', poses: 'chop', free: true, mirror: true, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], tip: [-0.01, 0.48, 0.09] },
     hammer: { url: T('fp-hammer'), set: 'swing', poses: 'chop', free: true, mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25] },
     knife: { url: T('fp-knife'), set: 'swing', elbow: [0.05, -0.47, -0.14], hand: [-0.06, 0.08, 0.23], tip: [-0.21, 0.49, 0.27] },
   },

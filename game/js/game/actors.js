@@ -55,7 +55,10 @@ const ActorSprites = {
   },
   get(defId, action, frame, rot) {
     const def = ACTOR_DEFS()[defId];
-    if (def.baked && !def.actions[action]) { action = 'idle'; frame = 0; } // only the baked moves exist
+    if (def.baked) {
+      if (def.alias[action]) action = def.alias[action];
+      else if (!def.actions[action]) { action = 'idle'; frame = 0; } // only the baked moves exist
+    }
     const k = this.key(defId, action, frame, rot);
     const s = this.pinned.get(k) || this.cache.get(k);
     if (s) return s;

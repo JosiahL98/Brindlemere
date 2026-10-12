@@ -254,7 +254,7 @@ function buildTown() {
   m.prop('sign', 42.6, 33.5, { variant: 'smithy' });
   m.prop('sign', 14.6, 13.5, { variant: 'herbs' });
   m.prop('forge', 38.4, 33.0); m.addLight(38.4, 33.0, 2.6, 6, false);
-  m.prop('anvil', 37.4, 34.4);
+  m.prop('anvil', 37.4, 34.4, { ang: 0.88 }); // turned to face Tobin, who works at it
   m.prop('weaponrack', 39.4, 32.4);
   for (const [x, z] of [[37.4, 21.5], [37.4, 22.5], [43.4, 21.4], [27.4, 21.4], [27.4, 24.6], [19.6, 34.4], [25.4, 37.6], [44.6, 33.6]]) m.prop(rng1() < 0.5 ? 'barrel' : 'crate', x, z);
   m.prop('cart', 41.8, 28.6);
