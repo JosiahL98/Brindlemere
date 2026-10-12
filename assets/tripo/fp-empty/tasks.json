@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T22:11:55.640Z",
+    "kind": "text",
+    "task_id": "b5f0d2fb-436e-4c50-bc9a-832922db1540",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand, the hand clenched in a firm fist ready to punch, thumb folded across the front of the fingers, knuckles forward. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and item only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

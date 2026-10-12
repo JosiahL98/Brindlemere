@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:49:58.501Z",
+    "kind": "text",
+    "task_id": "a6a36443-9853-4b18-b034-581d6e872759",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A crude wooden club cut from a knotted ash branch: a thick, heavy knobbly striking end and a thinner handle worn smooth by use. Realistic medieval game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

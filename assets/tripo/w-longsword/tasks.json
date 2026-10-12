@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:58:02.676Z",
+    "kind": "text",
+    "task_id": "615c0320-6f3d-4e83-a7fb-f180ac405008",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A fine steel longsword: long, straight double-edged blade with a fuller, long leather-wrapped grip for two hands, gilded crossguard and gilded pommel. Realistic game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

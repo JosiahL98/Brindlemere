@@ -7,6 +7,8 @@ Two browser projects that share one procedural sprite engine, in the style of *T
 
 Neither needs a build step or anything installed. Open `game/index.html` or `index.html` in a browser.
 
+The game is published to GitHub Pages by `.github/workflows/pages.yml` on every push to `main`. It builds the single-file game (`node tools/build.js --game`) and serves it at the site root, with the bestiary at `bestiary.html`.
+
 ## Brindlemere
 
 You wake up in your mother's house in Brindlemere, a valley town under a purple sky, and decide you're done with farm work. Old Captain Bram at the Sleeping Goose knows the adventuring trade. Talk to him and the main quest, *A New Path*, takes it from there.
@@ -47,7 +49,7 @@ On touch screens, an on-screen stick, a look pad and buttons appear.
 - **The world** is drawn into a 320×200, 256-colour frame buffer (`game/js/render.js`). Each pixel casts its own ray through the tile grid, so the camera can tilt all the way up or down with true perspective, not the usual raycaster shear. Walls can have several heights, and rays drop onto the tops of low walls. Lighting goes through 32 DOOM-style colormaps per fog colour, plus a baked lightmap from fireplaces and street lamps.
 - **Textures** are generated at load time, not loaded from files (`game/js/textures.js`).
 - **Most villagers, beasts, props, item icons and portraits** are sculpted from signed-distance primitives and ray-marched, like the bestiary's creatures.
-- **Some assets are baked from 3D models** generated with [Tripo](https://www.tripo3d.ai/): Elsa (rigged, with idle, walk and nod animations) and the first-person arms and weapons. `tools/bake-mesh.js` and `tools/bake-viewmodel.js` render them with three.js in headless Chrome, using the game's camera tilt and light direction, 4× supersampled. They are then snapped to the palette with dithering and dark outlines, and stored compressed in `game/js/data/baked/`. The source models live in `assets/tripo/`, and the game itself never loads them.
+- **Some assets are baked from 3D models** generated with [Tripo](https://www.tripo3d.ai/): Elsa, Tobin and Pip (rigged, with idle, walk, nod and, for Tobin, hammering and strike animations) and the first-person arms, some modelled already holding their weapon. `tools/bake-mesh.js` and `tools/bake-viewmodel.js` render them with three.js in headless Chrome, using the game's camera tilt and light direction, 4× supersampled. They are then snapped to the palette with dithering and dark outlines, and stored compressed in `game/js/data/baked/`. The source models live in `assets/tripo/`, and the game itself never loads them.
 - **Villagers** use a shared body builder (`game/js/actors/people.js`). It covers proportions by sex, age and build, and faces with cheekbones, lids, lashes, brows, noses, lips and stubble. It also covers hairstyles and beards, and outfits from aprons to an open-shirted smith.
 - **Actor sprites render on demand.** Each one is ray-marched a few rows per frame within a small time budget, while the nearest finished pose stands in. The poses you see when entering a map are rendered behind the door fade.
 

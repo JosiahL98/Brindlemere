@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:45:40.957Z",
+    "kind": "text",
+    "task_id": "93accc2e-f523-4fb7-a7ec-d42f0374648d",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Game asset for a first-person fantasy game: a single realistic human right forearm and hand, cut off cleanly a little below the elbow. The hand is closed in a firm fist as if gripping a sword hilt, thumb wrapped over the fingers. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with a few folds and a frayed cuff; the hand is bare, weathered skin with visible knuckles. Isolated arm only, realistic, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, weapon, sword, two arms, cartoon, stylised, robot, glove, armour"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

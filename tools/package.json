@@ -1,0 +1,9 @@
+{
+  "name": "sprites-tools",
+  "private": true,
+  "description": "Dev-only dependencies for tools/bake-mesh.js (three.js in headless Chrome)",
+  "dependencies": {
+    "puppeteer-core": "^24.0.0",
+    "three": "^0.180.0"
+  }
+}

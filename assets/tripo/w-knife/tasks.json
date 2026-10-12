@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:54:08.874Z",
+    "kind": "text",
+    "task_id": "ddef66c2-5fc7-4066-b87f-5152ef49d298",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A fisherman's gutting knife: narrow, slightly curved steel blade and a simple wooden handle bound with tarred twine. Realistic game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

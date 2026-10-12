@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Halls Bestiary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquarda+Bastarda+9&family=VT323&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header class="masthead">
+    <h1>Bestiary</h1>
+    <p class="tagline">A field guide to the things in the deep halls. Every frame is sculpted, lit and quantised to a 256-colour palette at runtime.</p>
+  </header>
+
+  <main class="layout">
+    <nav class="panel roster" aria-label="Creatures">
+      <h2 class="panel-title">Creatures</h2>
+      <ul id="roster" class="roster-list"></ul>
+    </nav>
+
+    <section class="stage" aria-label="Viewer">
+      <div class="screen-frame aspect">
+        <canvas id="view" width="320" height="200" aria-label="Creature viewport"></canvas>
+      </div>
+
+      <div class="panel controls">
+        <div class="ctl ctl-action" role="group" aria-labelledby="lbl-action">
+          <span class="label" id="lbl-action">Action</span>
+          <div id="actions" class="btn-row"></div>
+        </div>
+        <div class="ctl ctl-facing" role="group" aria-labelledby="lbl-facing">
+          <span class="label" id="lbl-facing">Facing</span>
+          <div id="compass" class="compass"></div>
+        </div>
+        <div class="ctl ctl-play" role="group" aria-labelledby="lbl-play">
+          <span class="label" id="lbl-play">Playback</span>
+          <div class="play-row">
+            <div class="btn-row">
+              <button type="button" class="btn" id="prev" aria-label="Previous frame">&lsaquo; Frame</button>
+              <button type="button" class="btn btn-wide" id="play">Pause</button>
+              <button type="button" class="btn" id="next" aria-label="Next frame">Frame &rsaquo;</button>
+            </div>
+            <label class="field">
+              <span>Speed</span>
+              <select id="speed">
+                <option value="0.25">¼×</option>
+                <option value="0.5">½×</option>
+                <option value="1" selected>1×</option>
+                <option value="2">2×</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel sheet-panel">
+        <div class="sheet-head">
+          <h2 class="panel-title">Frames</h2>
+          <span id="sheet-info" class="sheet-info"></span>
+        </div>
+        <div class="sheet-scroll"><canvas id="sheet" width="64" height="64" aria-label="All frames of the current action; click one to inspect it"></canvas></div>
+      </div>
+    </section>
+
+    <aside class="panel codex" aria-label="Creature details and scene options">
+      <h2 class="codex-name" id="c-name"></h2>
+      <p class="lore" id="c-lore"></p>
+      <dl class="stats">
+        <div><dt>Health</dt><dd id="c-hp"></dd></div>
+        <div><dt>Damage</dt><dd id="c-dmg"></dd></div>
+        <div><dt>Speed</dt><dd id="c-speed"></dd></div>
+        <div><dt>Sprite</dt><dd id="c-code"></dd></div>
+        <div><dt>Frames</dt><dd id="c-frames"></dd></div>
+        <div><dt>Size</dt><dd id="frame-size"></dd></div>
+      </dl>
+
+      <h3 class="sub-title">Scene</h3>
+      <div class="options">
+        <label class="field"><span>Location</span><select id="env"></select></label>
+        <label class="field"><span>Lights</span><select id="flicker"></select></label>
+        <label class="field"><span>Distance</span>
+          <select id="zoom">
+            <option value="far">Far</option>
+            <option value="mid">Middle</option>
+            <option value="near">Near</option>
+            <option value="close">Close</option>
+          </select>
+        </label>
+        <label class="field field-range"><span>Light level <output id="light-val">176</output></span>
+          <input type="range" id="light" min="40" max="255" step="1" value="176">
+        </label>
+        <label class="check"><input type="checkbox" id="opt-repeat"> Repeat one-shot actions</label>
+        <label class="check"><input type="checkbox" id="opt-scroll"> Move while walking</label>
+        <label class="check"><input type="checkbox" id="opt-aspect"> 4:3 pixel aspect</label>
+        <label class="check"><input type="checkbox" id="opt-fuzz"> Spectre fuzz</label>
+      </div>
+
+      <h3 class="sub-title">Keys</h3>
+      <dl class="keys">
+        <div><dt><kbd>1</kbd>–<kbd>5</kbd></dt><dd>Action</dd></div>
+        <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Turn</dd></div>
+        <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Creature</dd></div>
+        <div><dt><kbd>Space</kbd></dt><dd>Pause</dd></div>
+        <div><dt><kbd>,</kbd> <kbd>.</kbd></dt><dd>Step frame</dd></div>
+      </dl>
+    </aside>
+  </main>
+</div>
+
+<script src="js/math.js"></script>
+<script src="js/palette.js"></script>
+<script src="js/sdf.js"></script>
+<script src="js/materials.js"></script>
+<script src="js/rig.js"></script>
+<script src="js/creatures/skeleton.js"></script>
+<script src="js/creatures/orc.js"></script>
+<script src="js/creatures/knight.js"></script>
+<script src="js/creatures/fiend.js"></script>
+<script src="js/creatures/gazer.js"></script>
+<script src="js/creatures/spider.js"></script>
+<script src="js/creatures/lich.js"></script>
+<script src="js/creatures/darkelf.js"></script>
+<script src="js/fx.js"></script>
+<script src="js/font.js"></script>
+<script src="js/texgen.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

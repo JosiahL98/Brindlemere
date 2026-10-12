@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:59:55.503Z",
+    "kind": "text",
+    "task_id": "c38f71e5-e2f3-4b04-ae4a-223dde72967f",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A medieval flanged mace: heavy iron head with six flanges on a wooden haft with a leather grip. Realistic game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

@@ -1,0 +1,106 @@
+[
+  {
+    "at": "2026-10-12T21:26:31.695Z",
+    "kind": "text",
+    "task_id": "e5ddd943-99dc-4734-b3c4-e6d0d107d20f",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a medieval peasant woman in her early forties, the hero's mother in a dark-fantasy farming village. Long wavy brown hair worn loose past the shoulders, fair skin, a kind but tired face with fine lines, blue eyes. Long-sleeved deep blue wool dress down to the ankles, an off-white linen apron tied at the waist with a narrow brown leather belt, plain dark leather shoes. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Late-medieval fantasy villager in the style of Daggerfall or Oblivion, realistic, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, weapon, hat, cape, jewelry, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T21:26:45.934Z",
+    "kind": "rigcheck",
+    "task_id": "6dda7418-fdcb-49ad-8680-cfa47e111d7e",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "e5ddd943-99dc-4734-b3c4-e6d0d107d20f"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T21:26:53.601Z",
+    "kind": "rig",
+    "task_id": "52e43686-ed9b-4914-9023-37377211a22c",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "e5ddd943-99dc-4734-b3c4-e6d0d107d20f",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T21:27:07.093Z",
+    "kind": "animate",
+    "task_id": "60f95b5d-3399-43e9-9af3-3b8617ee7625",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "52e43686-ed9b-4914-9023-37377211a22c",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T21:27:14.926Z",
+    "kind": "animate",
+    "task_id": "995637bc-354d-471f-b70d-c45f0ce6fea6",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "52e43686-ed9b-4914-9023-37377211a22c",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T21:27:22.939Z",
+    "kind": "animate",
+    "task_id": "b4a02094-bcdb-426d-a19c-69083a2aaef4",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "52e43686-ed9b-4914-9023-37377211a22c",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  }
+]

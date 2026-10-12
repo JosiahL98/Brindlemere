@@ -1,0 +1,124 @@
+[
+  {
+    "at": "2026-10-12T22:15:45.839Z",
+    "kind": "text",
+    "task_id": "64f27909-26db-4c46-b2fb-01e136710838",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the village blacksmith of a dark-fantasy medieval town, a powerful man in his late thirties. Shirtless, with a broad muscular chest, defined abdominal muscles and heavy arms, olive-tanned skin smudged with soot. Long straight black hair past the shoulders, a thick black moustache and stubble, dark brown eyes, a stern face. Worn brown leather trousers, a wide leather work belt, leather bracers and sturdy boots. He holds a blacksmith's forging hammer in his right hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform, shirt, armour, cape, helmet"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:16:53.094Z",
+    "kind": "rigcheck",
+    "task_id": "a2533a1e-19de-457d-847a-1609e831f822",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "64f27909-26db-4c46-b2fb-01e136710838"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:17:00.869Z",
+    "kind": "rig",
+    "task_id": "fc886456-ae19-4909-b221-e413fb023b9c",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "64f27909-26db-4c46-b2fb-01e136710838",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:21.945Z",
+    "kind": "animate",
+    "task_id": "d720f63b-845b-4438-8e60-93b3c3a17ffc",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "fc886456-ae19-4909-b221-e413fb023b9c",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:26.601Z",
+    "kind": "animate",
+    "task_id": "bb5cb423-da76-4fd1-ad4e-75461ac68626",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "fc886456-ae19-4909-b221-e413fb023b9c",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:31.134Z",
+    "kind": "animate",
+    "task_id": "98132cf4-5442-41c4-8ae9-c440f500a1d1",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "fc886456-ae19-4909-b221-e413fb023b9c",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:38.777Z",
+    "kind": "animate",
+    "task_id": "37db02cb-14e5-4cef-bb20-33a60a4e9c33",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "fc886456-ae19-4909-b221-e413fb023b9c",
+      "animation": "preset:biped:chop",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-chop.glb"
+    ]
+  }
+]

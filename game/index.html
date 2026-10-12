@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brindlemere</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jacquarda+Bastarda+9&family=VT323&display=swap">
+<link rel="stylesheet" href="css/game.css">
+</head>
+<body>
+<div class="app">
+  <div id="screen">
+    <canvas id="view" width="320" height="200" aria-label="Game view"></canvas>
+    <div id="fade" aria-hidden="true"></div>
+    <button type="button" id="hud-hint" class="hint" hidden>Click to look around · Esc for the menu</button>
+
+    <!-- Title -->
+    <section id="title" class="screen-panel" hidden>
+      <div class="title-block">
+        <h1>Brindlemere</h1>
+        <p class="subtitle">A New Path</p>
+        <div class="menu">
+          <button type="button" class="btn big" id="btn-new">New game</button>
+          <button type="button" class="btn big" id="btn-continue" hidden>Continue</button>
+          <button type="button" class="btn big" id="btn-controls">Controls</button>
+        </div>
+        <p class="fineprint">Sound starts when you choose an option.</p>
+      </div>
+    </section>
+
+    <!-- Character creation -->
+    <section id="create" class="panel center" hidden>
+      <form id="create-form">
+        <h2>Who are you?</h2>
+        <label class="field" for="char-name">Name</label>
+        <input id="char-name" type="text" maxlength="18" value="Ash" autocomplete="off" autofocus>
+        <p class="label">Before today, you were a...</p>
+        <div id="bg-list" class="cards"></div>
+        <button type="submit" class="btn big">Begin</button>
+      </form>
+    </section>
+
+    <!-- Intro -->
+    <section id="intro" class="panel center parchment" hidden>
+      <h2>Spring, in the valley</h2>
+      <div id="intro-text"></div>
+      <button type="button" class="btn big" id="intro-go">Get up</button>
+    </section>
+
+    <!-- Dialogue -->
+    <section id="dialogue" class="panel bottom" hidden>
+      <div class="dlg-face"><div id="dlg-portrait" class="frame"></div></div>
+      <div class="dlg-main">
+        <div class="dlg-head"><h2 id="dlg-name"></h2><span id="dlg-title" class="sub"></span></div>
+        <p id="dlg-text" class="speech"></p>
+        <div id="dlg-topics" class="topics"></div>
+      </div>
+    </section>
+
+    <!-- Barter -->
+    <section id="barter" class="panel large" hidden>
+      <header class="bar"><h2>Barter: <span id="barter-name"></span></h2><button type="button" class="btn" data-close>Done</button></header>
+      <div class="two">
+        <div class="col"><h3>For sale <span id="barter-gold" class="sub"></span></h3><ul id="barter-stock" class="list"></ul></div>
+        <div class="col"><h3>Your goods <span id="barter-you" class="sub"></span></h3><ul id="barter-mine" class="list"></ul></div>
+      </div>
+      <footer class="detail"><p id="barter-detail"></p><button type="button" class="btn" id="barter-act" hidden>Buy</button></footer>
+    </section>
+
+    <!-- Inventory -->
+    <section id="inventory" class="panel large" hidden>
+      <header class="bar"><h2>Inventory</h2><div id="inv-tabs" class="tabs"></div><button type="button" class="btn" data-close>Close</button></header>
+      <div class="two inv">
+        <ul id="inv-list" class="list"></ul>
+        <div class="inv-side">
+          <div id="inv-detail" class="detail-box"></div>
+          <div id="inv-acts" class="acts"></div>
+          <div id="char-sheet" class="sheet"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Journal -->
+    <section id="journal" class="panel large parchment" hidden>
+      <header class="bar"><h2>Journal</h2><button type="button" class="btn" data-close>Close</button></header>
+      <div class="two journal">
+        <ul id="j-list" class="list"></ul>
+        <div id="j-body" class="j-body"></div>
+      </div>
+    </section>
+
+    <!-- Map -->
+    <section id="mapview" class="panel large" hidden>
+      <header class="bar"><h2 id="map-title">Map</h2><button type="button" class="btn" data-close>Close</button></header>
+      <div class="map-wrap"><canvas id="map-canvas" width="64" height="64" aria-label="Map of the area"></canvas></div>
+    </section>
+
+    <!-- Loot -->
+    <section id="loot" class="panel center" hidden>
+      <h2 id="loot-title">Search</h2>
+      <ul id="loot-list" class="list"></ul>
+      <div class="acts"><button type="button" class="btn" id="loot-all">Take all (E)</button><button type="button" class="btn" data-close>Close</button></div>
+    </section>
+
+    <!-- Reading -->
+    <section id="reader" class="panel center parchment" hidden>
+      <h2 id="reader-title"></h2>
+      <div id="reader-text"></div>
+      <button type="button" class="btn" data-close>Close</button>
+    </section>
+
+    <!-- Sleep / wait -->
+    <section id="sleep" class="panel center" hidden>
+      <h2 id="sleep-title">Sleep</h2>
+      <p id="sleep-note"></p>
+      <label class="field" for="sleep-hours">For <output id="sleep-val"></output></label>
+      <input id="sleep-hours" type="range" min="1" max="12" step="1" value="8">
+      <div class="acts"><button type="button" class="btn" id="sleep-go">Rest</button><button type="button" class="btn" data-close>Cancel</button></div>
+    </section>
+
+    <!-- Pause -->
+    <section id="pause" class="panel center" hidden>
+      <h2>Paused</h2>
+      <div class="menu">
+        <button type="button" class="btn" id="btn-resume">Resume</button>
+        <button type="button" class="btn" id="btn-save">Save game</button>
+        <button type="button" class="btn" id="btn-load">Load game</button>
+        <button type="button" class="btn" id="btn-pause-controls">Controls</button>
+        <button type="button" class="btn" id="btn-quit">Quit to title</button>
+      </div>
+      <p id="save-msg" class="sub" aria-live="polite"></p>
+      <div class="settings">
+        <label class="field" for="opt-music">Music</label><input id="opt-music" type="range" min="0" max="1" step="0.05">
+        <label class="field" for="opt-sfx">Sound effects</label><input id="opt-sfx" type="range" min="0" max="1" step="0.05">
+        <label class="field" for="opt-sens">Mouse sensitivity</label><input id="opt-sens" type="range" min="0.3" max="2.5" step="0.1">
+        <label class="check"><input id="opt-invert" type="checkbox"> Invert mouse look</label>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section id="controls" class="panel center" hidden>
+      <h2>Controls</h2>
+      <dl class="keys">
+        <div><dt>W A S D</dt><dd>Move</dd></div>
+        <div><dt>Mouse</dt><dd>Look (click the view first, or drag)</dd></div>
+        <div><dt>Arrows</dt><dd>Move and turn without a mouse</dd></div>
+        <div><dt>Shift</dt><dd>Run</dd></div>
+        <div><dt>Click, Space</dt><dd>Attack</dd></div>
+        <div><dt>E or F</dt><dd>Talk, open, pick up, search</dd></div>
+        <div><dt>I or Tab</dt><dd>Inventory</dd></div>
+        <div><dt>J</dt><dd>Journal</dd></div>
+        <div><dt>M</dt><dd>Map</dd></div>
+        <div><dt>T</dt><dd>Wait</dd></div>
+        <div><dt>H</dt><dd>Quick heal</dd></div>
+        <div><dt>Esc</dt><dd>Menu, save and load</dd></div>
+      </dl>
+      <button type="button" class="btn" data-close>Back</button>
+    </section>
+
+    <!-- Death -->
+    <section id="dead" class="panel center" hidden>
+      <h2>You have died</h2>
+      <p>Brindlemere will have to find another hero. Or you could try again.</p>
+      <div class="menu"><button type="button" class="btn" id="btn-dead-load">Load last save</button><button type="button" class="btn" id="btn-dead-title">Title screen</button></div>
+    </section>
+
+    <!-- Touch controls -->
+    <div id="touch" hidden>
+      <div id="look-pad"></div>
+      <div id="stick"><div id="stick-knob"></div></div>
+      <button type="button" id="t-attack" class="tbtn round" aria-label="Attack">Attack</button>
+      <button type="button" id="t-use" class="tbtn round" aria-label="Use">Use</button>
+      <div class="tbar">
+        <button type="button" id="t-inv" class="tbtn">Items</button>
+        <button type="button" id="t-journal" class="tbtn">Journal</button>
+        <button type="button" id="t-map" class="tbtn">Map</button>
+        <button type="button" id="t-menu" class="tbtn">Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/math.js"></script>
+<script src="../js/palette.js"></script>
+<script src="../js/texgen.js"></script>
+<script src="../js/sdf.js"></script>
+<script src="../js/materials.js"></script>
+<script src="../js/rig.js"></script>
+<script src="../js/font.js"></script>
+<script src="js/textures.js"></script>
+<script src="js/world.js"></script>
+<script src="js/render.js"></script>
+<script src="js/actors/props.js"></script>
+<script src="js/actors/people.js"></script>
+<script src="js/actors/beasts.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/actors/gear.js"></script>
+<script src="js/data/baked.js"></script>
+<script src="js/data/baked/elsa.js"></script>
+<script src="js/data/baked/tobin.js"></script>
+<script src="js/data/baked/pip.js"></script>
+<script src="js/data/baked/viewmodel.js"></script>
+<script src="js/data/cast.js"></script>
+<script src="js/game/state.js"></script>
+<script src="js/data/quests.js"></script>
+<script src="js/data/dialogue.js"></script>
+<script src="js/game/actors.js"></script>
+<script src="js/game/player.js"></script>
+<script src="js/game/viewmodel.js"></script>
+<script src="js/game/hud.js"></script>
+<script src="js/game/audio.js" data-dom></script>
+<script src="js/game/ui.js" data-dom></script>
+<script src="js/game/main.js" data-dom></script>
+</body>
+</html>

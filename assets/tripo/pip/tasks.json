@@ -1,0 +1,106 @@
+[
+  {
+    "at": "2026-10-12T22:16:48.692Z",
+    "kind": "text",
+    "task_id": "2d16df1f-b0cb-458c-b73c-c9d85dfd4b09",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a village boy about eight years old in a dark-fantasy medieval farming village. Messy straw-blonde hair, freckles across the nose, blue eyes, a cheeky look. A simple faded red wool tunic belted with a length of rope, brown woollen trousers and worn leather shoes. Realistic child proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward. Realistic medieval fantasy villager, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform, adult, weapon, hat"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:05.306Z",
+    "kind": "rigcheck",
+    "task_id": "51823f6c-575f-4c02-addc-8a1699055755",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "2d16df1f-b0cb-458c-b73c-c9d85dfd4b09"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:17:13.607Z",
+    "kind": "rig",
+    "task_id": "afdbdc80-7910-4509-bdd0-7cc270e61425",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "2d16df1f-b0cb-458c-b73c-c9d85dfd4b09",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:47.249Z",
+    "kind": "animate",
+    "task_id": "6337fbd1-2033-4e1b-95cc-871f988b38fc",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "afdbdc80-7910-4509-bdd0-7cc270e61425",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:17:51.971Z",
+    "kind": "animate",
+    "task_id": "de46c966-16de-4f9b-8e75-1d0e1f04a0a8",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "afdbdc80-7910-4509-bdd0-7cc270e61425",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:18:00.685Z",
+    "kind": "animate",
+    "task_id": "b877a279-9081-4367-b6fb-15b36d4cc869",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "afdbdc80-7910-4509-bdd0-7cc270e61425",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  }
+]

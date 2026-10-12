@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:55:39.843Z",
+    "kind": "text",
+    "task_id": "8db0e6c6-2885-4eb7-be8b-6fa794582fb7",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A blacksmith's cross-peen forging hammer: square-faced iron head and a worn ash wood handle. Realistic game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

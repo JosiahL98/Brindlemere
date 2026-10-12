@@ -1,0 +1,46 @@
+[
+  {
+    "at": "2026-10-12T22:13:17.227Z",
+    "kind": "text",
+    "task_id": "669623d2-a41f-4cf9-88ff-93c248f02a1f",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand gripping a crude wooden club by its handle in a firm natural grip, all four fingers wrapped around the handle and the thumb wrapped over them. The club is a knotted ash branch, thicker and knobbly at the striking end, and it rises from the top of the fist. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and item only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:18:15.645Z",
+    "kind": "text",
+    "task_id": "4a371d46-2819-4355-923d-c3507e8a721d",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand held upright, gripping a crude wooden club in a firm natural grip, all four fingers wrapped around the handle and the thumb wrapped over them. The club rises straight up out of the top of the fist above the thumb, like a raised torch, its thick knobbly striking end at the top; only a short stub of handle shows below the little finger. The club is a knotted ash branch. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and club only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal, horizontal club"
+    },
+    "files": [
+      "model-2.glb",
+      "preview-2.webp"
+    ]
+  }
+]

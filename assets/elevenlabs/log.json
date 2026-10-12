@@ -1,0 +1,148 @@
+[
+  {
+    "at": "2026-10-12T21:56:03.980Z",
+    "name": "town",
+    "status": "success",
+    "request": {
+      "prompt": "Dungeon synth, medieval dark fantasy village theme, slow and melancholic but warm. Lo-fi analog synthesizer pads, a gentle detuned synth flute melody, plucked lute-like arpeggios, a soft low drone, distant hand drum, tape hiss and long cavernous reverb. Evokes a quiet farming town under a purple twilight sky in an old 1990s RPG like Daggerfall or Arena. Minor key, no vocals, loops gently.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 21
+  },
+  {
+    "at": "2026-10-12T21:56:34.268Z",
+    "name": "title",
+    "status": "failed",
+    "http": 400,
+    "request": {
+      "prompt": "Main title theme for a dark fantasy RPG: slow, majestic and mournful. Deep drone, swelling string-like synth pads, a solemn choir pad, a lonely synth horn melody in a minor key, distant tolling bell, slow timpani. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "error": "{\"detail\":{\"type\":\"invalid_request\",\"code\":\"bad_request\",\"message\":\"Your prompt appears to have violated our Terms of Service. Please try again with a different prompt.\",\"status\":\"bad_prompt\",\"request_id\":\"00d55cb18c65c273ad0bd82ebfbce667\",\"data\":{\"reason\":\"copyrighted_material_detected\",\"prompt_suggestion\":\"Main title theme for a dark fantasy RPG: slow, majestic and mournful. Deep drone, swelling string-like synth pads, a solemn choir pad, a lonely synth horn melody in a minor key, distant toll"
+  },
+  {
+    "at": "2026-10-12T21:56:46.814Z",
+    "name": "night",
+    "status": "success",
+    "request": {
+      "prompt": "Night in a sleeping village: quiet, eerie and sparse. Low drones, soft wind, faint choir swells, sparse glassy bell tones, a slow minor-key synth flute phrase now and then. Very calm, dark, lots of space. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 12
+  },
+  {
+    "at": "2026-10-12T21:56:48.843Z",
+    "name": "wild",
+    "status": "failed",
+    "http": 400,
+    "request": {
+      "prompt": "Exploring a dark forest at the edge of the world: lonely and tense. Low droning bass, mournful synth horn calls, wind, slow ominous pads in a phrygian mode, occasional low hand drum, distant echoes. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "error": "{\"detail\":{\"type\":\"invalid_request\",\"code\":\"bad_request\",\"message\":\"Your prompt appears to have violated our Terms of Service. Please try again with a different prompt.\",\"status\":\"bad_prompt\",\"request_id\":\"3dcb46d6820ec5960a00837653c3dbcb\",\"data\":{\"reason\":\"copyrighted_material_detected\",\"prompt_suggestion\":\"Exploring a dark forest at the edge of the world: lonely and tense. Low droning bass, mournful synth horn calls, wind, slow ominous pads in a phrygian mode, occasional low hand drum, distant"
+  },
+  {
+    "at": "2026-10-12T21:57:01.329Z",
+    "name": "interior",
+    "status": "success",
+    "request": {
+      "prompt": "Inside a warm tavern and village shops: cosy but still old and melancholic. Plucked lute-like synth arpeggios, soft synth flute melody, gentle hand drum, warm pads, slow folk feel in a dorian mode. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1439810,
+    "credits": null,
+    "seconds_taken": 12
+  },
+  {
+    "at": "2026-10-12T21:57:13.244Z",
+    "name": "cellar",
+    "status": "success",
+    "request": {
+      "prompt": "A damp cellar beneath the inn: dark ambient, ominous and minimal. Deep sub drones, dissonant slow pads, dripping water echoes, rare metallic bell tones, creeping tension, no melody to speak of. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 12
+  },
+  {
+    "at": "2026-10-12T21:57:24.101Z",
+    "name": "chapel",
+    "status": "success",
+    "request": {
+      "prompt": "A small stone chapel: sacred and reverent dark ambient. Synthetic monastic choir, organ-like pads, slow plainchant-like melody, soft bell, long reverb, peaceful but sombre. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 11
+  },
+  {
+    "at": "2026-10-12T21:57:36.913Z",
+    "name": "combat",
+    "status": "success",
+    "request": {
+      "prompt": "A fight with wild beasts: driving and urgent. Pounding war drums, an aggressive low synth ostinato, brass-like synth stabs, tense minor-key melody, about 110 bpm, relentless. Dungeon synth and dark fantasy ambient, in the style of 1990s RPG soundtracks like Daggerfall and Arena and Mortiis-era dungeon synth: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 90000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1080574,
+    "credits": null,
+    "seconds_taken": 12
+  },
+  {
+    "at": "2026-10-12T22:00:41.301Z",
+    "name": "title",
+    "status": "success",
+    "request": {
+      "prompt": "Main title theme for a dark fantasy role-playing game: slow, majestic and mournful. Deep drone, swelling string-like synth pads, a solemn choir pad, a lonely synth horn melody in a minor key, distant tolling bell, slow timpani. Dungeon synth and dark fantasy ambient, like a 1990s first-person fantasy RPG soundtrack: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 13
+  },
+  {
+    "at": "2026-10-12T22:00:53.862Z",
+    "name": "wild",
+    "status": "success",
+    "request": {
+      "prompt": "Exploring a dark forest at the edge of the world: lonely and tense. Low droning bass, mournful synth horn calls, wind, slow ominous pads in a phrygian mode, occasional low hand drum, distant echoes. Dungeon synth and dark fantasy ambient, like a 1990s first-person fantasy RPG soundtrack: lo-fi analog synthesizers, tape warmth, long cavernous reverb. Instrumental, no vocals.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": null,
+    "seconds_taken": 12
+  }
+]

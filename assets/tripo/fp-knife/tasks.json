@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T22:14:23.248Z",
+    "kind": "text",
+    "task_id": "56ebd29c-1b10-4627-ab60-fb4d298ba97b",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand gripping a fisherman's gutting knife by its wooden handle in a firm natural grip, all four fingers wrapped around the handle and the thumb wrapped over them. The narrow, slightly curved steel blade rises from the top of the fist. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and item only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

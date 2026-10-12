@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-12T21:57:15.880Z",
+    "kind": "text",
+    "task_id": "8ad04581-43bf-47f8-979f-9db9dc8d224f",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "An old veteran's arming sword: notched, well-worn steel blade with a fuller, brass crossguard and brass wheel pommel, dark leather grip. Realistic game prop, single object, isolated.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "hand, person, arm, stand, display, base, pedestal, multiple objects, cartoon, stylised, toy"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]
