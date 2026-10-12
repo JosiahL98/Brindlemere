@@ -1,0 +1,106 @@
+[
+  {
+    "at": "2026-10-12T22:48:54.295Z",
+    "kind": "text",
+    "task_id": "415045b4-3c27-48fd-af2b-d2455b297a2e",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the town guard, a man in his thirties. Short brown hair under an iron kettle helmet, a brown moustache, blue eyes. A padded gambeson under a chainmail shirt, a navy-blue tabard, grey trousers and leather boots. He holds a long wooden spear upright in his right hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:48:59.246Z",
+    "kind": "rigcheck",
+    "task_id": "44bd4add-1b08-440d-b99a-dcd9b70aeecc",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "415045b4-3c27-48fd-af2b-d2455b297a2e"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:49:06.956Z",
+    "kind": "rig",
+    "task_id": "a1430e58-e9df-4a37-8161-c30a7adad2fc",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "415045b4-3c27-48fd-af2b-d2455b297a2e",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:49:18.519Z",
+    "kind": "animate",
+    "task_id": "a23759fe-062c-4ba1-b854-bbfc3b23f6a2",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a1430e58-e9df-4a37-8161-c30a7adad2fc",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:49:30.300Z",
+    "kind": "animate",
+    "task_id": "b1cfa95f-35d9-4756-a537-9002875ecf38",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a1430e58-e9df-4a37-8161-c30a7adad2fc",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:49:38.381Z",
+    "kind": "animate",
+    "task_id": "5279d040-0bb6-4aaa-a042-591abfcbb62b",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a1430e58-e9df-4a37-8161-c30a7adad2fc",
+      "animation": "preset:biped:slash",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-slash.glb"
+    ]
+  }
+]

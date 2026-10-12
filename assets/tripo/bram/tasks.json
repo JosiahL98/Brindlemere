@@ -66,5 +66,23 @@
     "files": [
       "anim-idle.glb"
     ]
+  },
+  {
+    "at": "2026-10-12T22:49:46.867Z",
+    "kind": "animate",
+    "task_id": "d4ba6564-00cb-403b-9860-579e692fde6f",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "0d663b41-2a79-4ed7-96ec-f4fd6152c38b",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
   }
 ]

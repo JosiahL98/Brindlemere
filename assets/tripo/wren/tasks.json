@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:45:30.305Z",
+    "kind": "text",
+    "task_id": "9e4b3860-fbd4-4fc9-a3c3-d92a4d5262a3",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the young herbalist, a slender woman in her early twenties. Long chestnut hair, green eyes, a gentle face. A green linen dress with an olive overskirt and a gold-coloured belt, a wicker basket of herbs on her left arm. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:45:34.901Z",
+    "kind": "rigcheck",
+    "task_id": "a848b630-b586-40f3-9f69-49582db2d4cd",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "9e4b3860-fbd4-4fc9-a3c3-d92a4d5262a3"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:45:48.781Z",
+    "kind": "rig",
+    "task_id": "37184665-0147-4c79-917f-ce962fd2b4bf",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "9e4b3860-fbd4-4fc9-a3c3-d92a4d5262a3",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:45:57.222Z",
+    "kind": "animate",
+    "task_id": "034d6926-8cf9-4e93-952e-d4a8d94b911d",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "37184665-0147-4c79-917f-ce962fd2b4bf",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]

@@ -1,0 +1,70 @@
+[
+  {
+    "at": "2026-10-12T22:47:03.033Z",
+    "kind": "text",
+    "task_id": "c3dc2205-170a-4f02-b3c5-d3edc0058bf1",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a priest of the Eight gods, a thin man in his forties. Tonsured brown hair, brown eyes, a kind, serious face. A plain brown hooded monk's robe tied with a rope belt, sandals, holding a small leather-bound book in his left hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:47:07.523Z",
+    "kind": "rigcheck",
+    "task_id": "19e87bf5-9e09-4c41-b3e5-d074f4523c5c",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "c3dc2205-170a-4f02-b3c5-d3edc0058bf1"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-12T22:47:15.184Z",
+    "kind": "rig",
+    "task_id": "beff7197-5e4a-4ced-9272-0c8fec04a4b4",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "c3dc2205-170a-4f02-b3c5-d3edc0058bf1",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-12T22:47:26.641Z",
+    "kind": "animate",
+    "task_id": "c3c625f0-4b00-4d94-868a-449e05eb6ff4",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "beff7197-5e4a-4ced-9272-0c8fec04a4b4",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  }
+]
