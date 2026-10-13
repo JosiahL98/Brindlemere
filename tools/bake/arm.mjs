@@ -8,6 +8,7 @@
 export const SHOULDER = [6.5, -9, 2], UPPER = 11, FORE = 12;
 const add = (a, b) => a.map((v, i) => v + b[i]), sub = (a, b) => a.map((v, i) => v - b[i]), mul = (a, k) => a.map((v) => v * k);
 const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], len = (a) => Math.sqrt(dot(a, a)), norm = (a) => mul(a, 1 / (len(a) || 1));
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 export const armLength = (fr) => len(sub(fr.elbow, SHOULDER)); // how long the upper arm would have to be
 
 // Two-bone IK: the elbow for a hand at H, bending towards `pole`. Returns the hand (pulled in if
@@ -41,6 +42,7 @@ function keyArm(k) {
 export function armPose(keys, t) {
   let i = 0;
   while (i < keys.length - 2 && t > keys[i + 1].at) i++;
+  if (keys[0].upper) return jointPose(keys, t, i);
   if (keys[0].tilt !== undefined) return rigidPose(keys, t, i);
   const arms = keys.map(keyArm);
   const i0 = Math.max(0, i - 1), i3 = Math.min(keys.length - 1, i + 2);
@@ -62,8 +64,12 @@ export function armPose(keys, t) {
 // the arm does the work. At rest the palm faces left and the weapon stands straight up, so the
 // forearm rises at 90 - COCK degrees. Keys give where the fist is and how far the whole forearm,
 // hand and weapon lean to the right (degrees, as seen through the eyes; negative leans left).
-const COCK = 35, DEG = Math.PI / 180;
-const REST = { fore: [0, Math.sin((90 - COCK) * DEG), -Math.cos((90 - COCK) * DEG)], palm: [-1, 0, 0], weapon: [0, 1, 0] };
+// TURN: how far the whole hand is turned to face forward (degrees about the vertical): the palm
+// faces left and forward, so the back of the hand and the knuckles show, and the weapon still
+// stands straight up.
+const COCK = 35, TURN = 30, DEG = Math.PI / 180;
+const yaw = (v, deg) => { const c = Math.cos(deg * DEG), s = Math.sin(deg * DEG); return [v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c]; };
+const REST = { fore: yaw([0, Math.sin((90 - COCK) * DEG), -Math.cos((90 - COCK) * DEG)], -TURN), palm: yaw([-1, 0, 0], -TURN), weapon: [0, 1, 0] };
 const lean = (v, deg) => { const c = Math.cos(-deg * DEG), s = Math.sin(-deg * DEG); return [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]]; };
 function rigidPose(keys, t, i) {
   const i0 = Math.max(0, i - 1), i3 = Math.min(keys.length - 1, i + 2);
@@ -74,19 +80,36 @@ function rigidPose(keys, t, i) {
   const fore = lean(REST.fore, tilt);
   return { hand, fore, palm: lean(REST.palm, tilt), weapon: lean(REST.weapon, tilt), elbow: sub(hand, mul(fore, FORE)), key: i, tilt };
 }
-const READY = { hand: [7.4, -5.4, -14.5], tilt: 0 };
+// The swing, jointed. The shoulder stays put and the upper arm keeps its length; keys give which
+// way the upper arm points from the shoulder, which way the forearm points, and roughly where the
+// weapon should point. The wrist doesn't bend: the weapon stays cocked COCK degrees towards the
+// thumb, and the forearm rolls to bring it round as near that way as it goes. Directions follow
+// smooth curves through the keys, so the arm never stops at one.
+const catmull = (k, i, u, f) => {
+  const i0 = Math.max(0, i - 1), i3 = Math.min(k.length - 1, i + 2), [p0, p1, p2, p3] = [f(k[i0]), f(k[i]), f(k[i + 1]), f(k[i3])], u2 = u * u, u3 = u2 * u;
+  return [0, 1, 2].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3));
+};
+function jointPose(keys, t, i) {
+  const u = Math.min(1, Math.max(0, (t - keys[i].at) / (keys[i + 1].at - keys[i].at)));
+  const upper = norm(catmull(keys, i, u, (k) => norm(k.upper))), fore = norm(catmull(keys, i, u, (k) => norm(k.fore))), want = norm(catmull(keys, i, u, (k) => norm(k.weapon)));
+  const elbow = add(SHOULDER, mul(upper, UPPER)), hand = add(elbow, mul(fore, FORE));
+  const thumb = norm(sub(want, mul(fore, dot(want, fore))));
+  const weapon = norm(add(mul(fore, Math.cos(COCK * DEG)), mul(thumb, Math.sin(COCK * DEG))));
+  return { hand, fore, palm: cross(thumb, fore), weapon, elbow, key: i };
+}
+const READY = { upper: [-0.2, -0.55, -0.81], fore: REST.fore, weapon: [0, 1, 0] };
 export const MOVES = {
-  // Every weapon: the fist shifts a little to the right as forearm, hand and weapon lean right,
-  // tipping the weapon up and to the right; then the arm drags it down and to the left across
-  // the screen, the lean easing through upright, and comes back to rest.
+  // Every weapon: the elbow comes in towards the middle of the chest as the forearm folds up and
+  // the weapon tips up and to the right; then the forearm extends, sweeping the weapon down and
+  // diagonally left across the screen, and the arm comes back to rest.
   swing: {
     keys: [
       { at: 0, ...READY },
-      { at: 0.18, hand: [8.4, -2.5, -14.5], tilt: 35 },
-      { at: 0.3, hand: [5.5, -4.3, -15], tilt: 33 },
-      { at: 0.42, hand: [1.5, -6.8, -15.5], tilt: 15 },
-      { at: 0.55, hand: [-1.5, -8.6, -16], tilt: -12 },
-      { at: 0.85, hand: [4, -7, -15], tilt: -4 },
+      { at: 0.18, upper: [-0.5, 0, -0.86], fore: [0.5, 0.78, -0.38], weapon: [0.6, 0.8, 0] },
+      { at: 0.3, upper: [-0.48, 0.05, -0.87], fore: [0.15, 0.62, -0.77], weapon: [0.5, 0.82, -0.25] },
+      { at: 0.42, upper: [-0.45, -0.05, -0.89], fore: [-0.45, 0.05, -0.89], weapon: [-0.1, 0.85, -0.5] },
+      { at: 0.55, upper: [-0.55, -0.15, -0.82], fore: [-0.85, 0.1, -0.52], weapon: [-0.6, 0.65, -0.45] },
+      { at: 0.85, upper: [-0.35, -0.4, -0.85], fore: [0, 0.6, -0.8], weapon: [-0.1, 0.95, -0.2] },
       { at: 1.15, ...READY },
     ],
     frames: [0, 0.09, 0.18, 0.26, 0.32, 0.37, 0.42, 0.48, 0.56, 0.75, 0.95],
@@ -134,7 +157,9 @@ export function sampleMoves() {
 // The arm-and-weapon models. Points read off each model (tools/model-views.js, or
 // window.fusedInfo): the elbow end, the middle of the fist and the weapon's tip; palm: which way
 // the palm faces, in the model (from tools/bake-viewmodel.js --calibrate). mirror: the model came
-// out as a left hand. items: what the game uses it for (game/js/game/viewmodel.js).
+// out as a left hand. items: what the game uses it for (game/js/game/viewmodel.js). spin:
+// degrees to turn the weapon's head or blade about its handle, above the fist, where the model
+// holds it facing sideways.
 const T = (id, n = 1) => `/assets/tripo/${id}/model-${n}.glb`;
 export const FUSED = {
   empty: { url: T('fp-empty'), move: 'punch', items: ['Bare fists'], elbow: [0.005, -0.317, 0.031], hand: [0, 0.37, -0.03], palm: [1, 0, 0] },

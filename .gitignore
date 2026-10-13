@@ -1,5 +1,5 @@
 tools/out/
 dist/
 node_modules/
-# Mixamo animations: used locally by the bakers, not redistributed
+# Mixamo animations: used locally by the bakers; Adobe's terms don't allow sharing the files themselves
 assets/adobemokap/

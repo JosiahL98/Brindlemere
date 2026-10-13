@@ -266,8 +266,7 @@ function gripOf(M, side, h) {
 function placePole(M, P, h, twoHands) {
   const R = gripOf(M, 'R', h);
   let butt, axis;
-  if (twoHands === 'auto') twoHands = gripOf(M, 'L', h).distanceTo(R) < 0.3 * h ? true : 'forearm';
-  if (twoHands === 'forearm') { axis = R.clone().sub(worldPos(boneNamed(M, 'R_Forearm'))).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
+  if (twoHands && twoHands.isVector3) { axis = twoHands; butt = R.clone().addScaledVector(axis, -0.32 * h); } // along a given grip
   else if (twoHands) { axis = gripOf(M, 'L', h).sub(R).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
   else { axis = new THREE.Vector3(0, 1, 0); butt = new THREE.Vector3(R.x, 0.01 * h, R.z); }
   P.g.position.copy(butt);
@@ -472,17 +471,37 @@ async function loadVillager(cfg, A, scale) {
   // A strike uses the first swing of a preset that may repeat it several times.
   const period = mocap ? mocap.duration : script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
   const T = mocap ? retargetSetup(M, mocap) : null;
-  return { M, pole, base, period, script, beast, mocap, T, A, cfg };
+  // A hand holding something that should stay upright (Bram's mug): which way was up in it as
+  // the model was made (its bind pose).
+  let upright = null;
+  if (cfg.upright) {
+    bindPose(M);
+    const hb = boneNamed(M, cfg.upright);
+    upright = { bone: hb, up: new THREE.Vector3(0, 1, 0).applyQuaternion(hb.getWorldQuaternion(new THREE.Quaternion()).invert()) };
+    if (mocap) bindPose(M); else if (script) M.rest(); else rest();
+  }
+  return { M, pole, base, period, script, beast, mocap, T, A, cfg, upright };
 }
 // Poses it at phase u (0..1 through the move); returns the IK targets of a scripted move.
 function poseVillager(V, u) {
-  const { M, pole, base, period, script, beast, mocap, T, A, cfg } = V;
+  const { M, pole, base, period, script, beast, mocap, T, A, cfg, upright } = V;
   let targets = null;
   if (mocap) retarget(M, mocap, T, u * period);
   else if (script) { M.rest(); targets = applyScript(M, script, u, cfg.height); }
   else if (beast) beastPose(M, beast, u, cfg.height, base, cfg);
   else poseAt(M, A.once ? u * period * 0.92 : u * period);
-  if (pole) placePole(M, pole, cfg.height, mocap ? 'auto' : !!(script && script.keys[0].L));
+  if (upright) {
+    // Turn the hand back so what it holds stands up again.
+    const now = upright.up.clone().applyQuaternion(upright.bone.getWorldQuaternion(new THREE.Quaternion()));
+    turnBone(upright.bone, new THREE.Quaternion().setFromUnitVectors(now.normalize(), new THREE.Vector3(0, 1, 0)));
+    M.holder.updateMatrixWorld(true);
+  }
+  if (pole && mocap) {
+    // A captured stab, with a pole in place of the knife: the shaft stays aimed ahead (tipped a
+    // little down) and leans a quarter of the way with the forearm, while the arm drives it.
+    const R = worldPos(boneNamed(M, 'R_Hand')), fore = R.clone().sub(worldPos(boneNamed(M, 'R_Forearm'))).normalize();
+    placePole(M, pole, cfg.height, new THREE.Vector3(0, -0.08, 1).normalize().multiplyScalar(0.75).addScaledVector(fore, 0.25).normalize());
+  } else if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
   return targets;
 }
 // The phase of each baked frame of an action.
@@ -571,20 +590,20 @@ async function loadStatic(url) {
   const model = gltf.scene;
   const pts = [];
   // Two cutting planes, moved by placeFused: where the forearm ends, and the wrist.
-  const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6), clip2 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6);
+  const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6), clip2 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6), clip3 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6);
   model.updateMatrixWorld(true);
   model.traverse((o) => {
     if (!o.isMesh) return;
     o.castShadow = o.receiveShadow = true;
     const map = o.material.map;
     if (map) map.colorSpace = THREE.SRGBColorSpace;
-    o.material = new THREE.MeshLambertMaterial({ map, clippingPlanes: [clip, clip2] });
+    o.material = new THREE.MeshLambertMaterial({ map, clippingPlanes: [clip, clip2, clip3] });
     const pos = o.geometry.attributes.position, v = new THREE.Vector3();
     for (let i = 0; i < pos.count; i += 3) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone());
   });
   const holder = new THREE.Group();
   holder.add(model);
-  return { holder, model, pts, clip, clip2 };
+  return { holder, model, pts, clip, clip2, clip3 };
 }
 const avg = (ps) => ps.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / Math.max(1, ps.length));
 // Principal axes of a point cloud (Tripo poses props diagonally, so the bounding box won't do).
@@ -665,6 +684,18 @@ function placeFused(M, F, fr, cfg) {
   MH.clip.constant = 1e6; MH.clip.normal.set(0, 1, 0);
   MH.clip2.normal.copy(n); MH.clip2.constant = -n.dot(W);
   M.sleeves[3].position.copy(W); M.sleeves[3].scale.setScalar(M.sleeveR * k * 0.72);
+  if (M.weapon) {
+    // The handle's axis in the world, the hand copy cut there, and the weapon copy turned about it.
+    const at = MH.holder.localToWorld(M.spin.at.clone()), dir = M.spin.dir.clone().applyQuaternion(MH.holder.quaternion).normalize();
+    MH.clip3.normal.copy(dir).negate(); MH.clip3.constant = dir.dot(at);
+    const MW = M.weapon, qs = new THREE.Quaternion().setFromAxisAngle(dir, F.spin * Math.PI / 180);
+    MW.holder.quaternion.copy(qs).multiply(MH.holder.quaternion);
+    MW.holder.scale.setScalar(k);
+    MW.holder.position.copy(MH.holder.position).sub(at).applyQuaternion(qs).add(at);
+    MW.holder.updateMatrixWorld(true);
+    MW.clip.constant = 1e6; MW.clip.normal.set(0, 1, 0); MW.clip2.constant = 1e6; MW.clip2.normal.set(0, 1, 0);
+    MW.clip3.normal.copy(dir); MW.clip3.constant = -dir.dot(at);
+  }
 }
 // Render whatever is in `objs` from the eye; returns the sprite cropped, at screen coordinates.
 function shootScreen(objs, cfg, rawOut, M) {
@@ -698,9 +729,10 @@ function shootScreen(objs, cfg, rawOut, M) {
 function sleeveMask(M, cam, W, H) {
   const saved = [], white = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }), black = new THREE.MeshBasicMaterial({ color: 0, side: THREE.DoubleSide });
   const whiteArm = white.clone(); whiteArm.clippingPlanes = [M.clip, M.clip2];
-  black.clippingPlanes = [M.hand.clip2];
+  black.clippingPlanes = [M.hand.clip2, M.hand.clip3];
   M.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = whiteArm; } });
   M.hand.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = black; } });
+  if (M.weapon) { const bw = black.clone(); bw.clippingPlanes = [M.weapon.clip3]; M.weapon.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = bw; } }); }
   for (const m of M.sleeves) { saved.push([m, m.material]); m.material = white; }
   renderer.shadowMap.enabled = false;
   renderer.render(scene, cam);
@@ -747,9 +779,13 @@ async function loadFused(F, cfg) {
   F = JSON.parse(JSON.stringify(F));
   const M = await loadStatic(F.url);
   M.hand = await loadStatic(F.url);
+  // spin: the part of the weapon above the fist (a hammer's head, a knife's blade) turned this many
+  // degrees about the handle, for models that came out holding it facing sideways. A third copy.
+  if (F.spin) M.weapon = await loadStatic(F.url);
   if (F.mirror) {
     // Generated as a left hand: flip it into a right one (points and all) before posing.
     M.model.scale.x *= -1; M.hand.model.scale.x *= -1;
+    if (M.weapon) M.weapon.model.scale.x *= -1;
     for (const p of M.pts) p.x = -p.x;
     for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
   }
@@ -778,6 +814,19 @@ async function loadFused(F, cfg) {
   // Forearm and upper arm (unit tubes, sized each frame), balls at the elbow and the wrist.
   M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen)];
   for (const m of M.sleeves) m.castShadow = m.receiveShadow = true;
+  if (M.weapon) {
+    // The handle's axis just above the fist: its middle there and a little further up, from the
+    // model's points close to the line from the fist to the tip.
+    const w = V3(F.tip).sub(h).normalize(), d0 = 2.6 / F.k;
+    const mid = (d) => {
+      const c = h.clone().addScaledVector(w, d);
+      const near = M.pts.filter((p) => Math.abs(p.clone().sub(c).dot(w)) < 0.008 && p.clone().sub(c).projectOnPlane(w).length() < 0.07);
+      return near.length ? near.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / near.length) : c;
+    };
+    const a = mid(d0), b = mid(d0 + 0.05);
+    M.spin = { at: a, dir: b.clone().sub(a).normalize().dot(w) > 0.7 ? b.clone().sub(a).normalize() : w };
+  }
+  M.parts = [M.holder, M.hand.holder, ...(M.weapon ? [M.weapon.holder] : []), ...M.sleeves];
   M.F = F;
   return M;
 }
@@ -794,7 +843,7 @@ window.bakeViewmodel = async (cfg) => {
       for (let r = 0; r < 4; r++) {
         F.palm = p0.clone().applyAxisAngle(fore, r * Math.PI / 2).toArray().map((x) => +x.toFixed(3));
         placeFused(M, F, cfg.moves[F.move][0], cfg);
-        const raw = []; shootScreen([M.holder, M.hand.holder, ...M.sleeves], cfg, raw); out.previews.push(Object.assign(raw[0], { label: `${id} palm ${F.palm.join(',')}` }));
+        const raw = []; shootScreen(M.parts, cfg, raw); out.previews.push(Object.assign(raw[0], { label: `${id} palm ${F.palm.join(',')}` }));
       }
       continue;
     }
@@ -803,7 +852,7 @@ window.bakeViewmodel = async (cfg) => {
     out.fused[id] = cfg.moves[F.move].map((fr) => {
       placeFused(M, F, fr, cfg);
       const raw = [];
-      const s = shootScreen([M.holder, M.hand.holder, ...M.sleeves], cfg, cfg.preview ? raw : null, M);
+      const s = shootScreen(M.parts, cfg, cfg.preview ? raw : null, M);
       if (cfg.preview) out.previews.push(raw[0]);
       return s;
     });

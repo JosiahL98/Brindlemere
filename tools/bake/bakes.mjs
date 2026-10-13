@@ -8,14 +8,15 @@
 // !flinch, !die for animals (over the rig's standing pose). cycle finds the loop in a longer clip;
 // once plays through once (a strike); speed quickens playback.
 // Animals: wide is the frame's half-width in heights, foot the bone whose sweep gives the walk's
-// stride, flip that it dies on its back; they have no dialogue portrait.
+// stride, flip that it dies on its back; they have no dialogue portrait. upright: a hand bone whose
+// held item (Bram's mug) is kept standing up whatever the animation does to the hand.
 const TALKER = 'idle=idle:4,walk=walk:8:cycle,talk=agree:4';
 const BEAST = 'idle=!rest:4,walk=walk:8:cycle,attack=!lunge:6:once,pain=!flinch:3:once,death=!die:7:once';
 export const BAKES = {
   elsa: { height: 58, actions: TALKER },
   tobin: { height: 62, actions: `${TALKER},work=~Standing Melee Attack Downward:10:cycle,attack=~Standing Melee Attack Downward:8:once` },
   pip: { height: 46, actions: TALKER },
-  bram: { height: 60, actions: 'idle=idle:4,talk=agree:4' },
+  bram: { height: 60, upright: 'R_Hand', actions: 'idle=idle:4,talk=agree:4' },
   marta: { height: 59, actions: 'idle=idle:4,talk=agree:4' },
   cedric: { height: 62, actions: 'idle=idle:4' },
   hilda: { height: 59, actions: 'idle=idle:4' },
@@ -24,8 +25,8 @@ export const BAKES = {
   godwin: { height: 59, actions: TALKER },
   agnes: { height: 55, actions: TALKER },
   nell: { height: 58, actions: `${TALKER},attack=~Stabbing:8:once` },
-  rolf: { height: 62, prop: 'spear', actions: 'idle=idle:4,walk=walk:8:cycle,attack=@thrust:6:once' },
-  odo: { height: 61, prop: 'pitchfork', actions: `${TALKER},attack=@thrust:6:once,work=@fork:6:cycle` },
+  rolf: { height: 62, prop: 'spear', actions: 'idle=idle:4,walk=walk:8:cycle,attack=~Stabbing:8:once' },
+  odo: { height: 61, prop: 'pitchfork', actions: `${TALKER},attack=~Stabbing:8:once,work=@fork:6:cycle` },
   wolf: { height: 36, wide: 1.1, foot: 'tripo0_Left_Limb_3', beast: true, actions: BEAST },
   rat: { height: 25, wide: 1.1, foot: 'tripo0_Left_Limb_3', beast: true, actions: BEAST },
   mudcrab: { height: 24, wide: 1.0, foot: 'tripo0_Left_Limb_5', flip: true, beast: true, actions: BEAST },
@@ -43,7 +44,7 @@ export function parseActions(spec) {
 export function bakeConfig(name, over = {}) {
   const b = Object.assign({ height: 58, res: 2.5, wide: 0.45, foot: 'L_Foot', actions: TALKER }, BAKES[name] || {}, over);
   return {
-    name, height: b.height, res: b.res, prop: b.prop || null, wide: b.wide, foot: b.foot, flip: !!b.flip,
+    name, height: b.height, res: b.res, prop: b.prop || null, wide: b.wide, foot: b.foot, flip: !!b.flip, upright: b.upright || null,
     actions: parseActions(b.actions), beast: !!b.beast,
     // Head and shoulders for the dialogue panel, framed like renderPortrait() (not for animals).
     portrait: b.beast || b.noPortrait ? null : { res: 3, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },

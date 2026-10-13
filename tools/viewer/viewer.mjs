@@ -233,7 +233,7 @@ async function showArm(id, moveName) {
   if (!fusedCache.has(id)) fusedCache.set(id, await loadFused(F, ARM));
   const move = await armMove(moveName || F.move);
   if (cur && cur.dispose) cur.dispose();
-  const M = fusedCache.get(id), objs = [M.holder, M.hand.holder, ...M.sleeves];
+  const M = fusedCache.get(id), objs = M.parts;
   for (const o of objs) arm.scene.add(o);
   const it = itemByName(F.items[0]);
   const dur = it ? it.swing : 0.5;
