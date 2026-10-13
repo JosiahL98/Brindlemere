@@ -106,7 +106,25 @@ export const MOVES = {
     frames: [0, 0.12, 0.24, 0.32, 0.38, 0.42, 0.5, 0.6, 0.72, 0.86, 1.0],
   },
 };
-// Every move's baked frames, posed.
+// Moves captured from real people (Mixamo, assets/adobemokap/<mocap>.fbx): the arm is read off
+// the captured body's right arm, seen from its own eyes (tools/bake/bake.mjs mocapMove). start and
+// end trim the clip to the attack (seconds); impact, if given, is when the blow lands (otherwise
+// when the fist moves fastest). Frames are sampled at the same phases as the swing's.
+const PHASES = [0, 0.09, 0.18, 0.26, 0.32, 0.37, 0.42, 0.48, 0.56, 0.75, 0.95];
+// Where the camera sits against the real eyes (tools/bake/bake.mjs mocapArm): lower, further back
+// and looking down, the way first-person games keep the arms in sight.
+const VIEW = { drop: 0, back: 0, pitch: 0 };
+export const MOCAP = {
+  overhead: { mocap: 'Standing Melee Attack Downward', frames: PHASES, view: { ...VIEW } },
+  horizontal: { mocap: 'Standing Melee Attack Horizontal', frames: PHASES, view: { ...VIEW } },
+  slash: { mocap: 'Sword And Shield Slash', frames: PHASES, view: { ...VIEW } },
+  inward: { mocap: 'Stable Sword Inward Slash', frames: PHASES, view: { ...VIEW } },
+  outward: { mocap: 'Stable Sword Outward Slash', frames: PHASES, view: { ...VIEW } },
+  stab: { mocap: 'Stabbing', frames: PHASES, view: { ...VIEW } },
+  cross: { mocap: 'Cross Punch', frames: PHASES, view: { ...VIEW } },
+};
+
+// Every keyframed move's baked frames, posed.
 export function sampleMoves() {
   const out = {};
   for (const [id, M] of Object.entries(MOVES)) out[id] = M.frames.map((t) => armPose(M.keys, t));

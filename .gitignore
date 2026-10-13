@@ -1,3 +1,5 @@
 tools/out/
 dist/
 node_modules/
+# Mixamo animations: used locally by the bakers, not redistributed
+assets/adobemokap/

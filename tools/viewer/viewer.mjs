@@ -1,9 +1,9 @@
 // The motion viewer: the first-person arm and the baked villagers and animals moving live in 3D,
 // posed by the same code the bakers use (tools/bake/), next to the frames the game shows.
 // Started by tools/viewer.js.
-import { THREE, LIGHT_VIEW, loadVillager, poseVillager, framePhase, loadFused, placeFused } from '/tools/bake/bake.mjs';
+import { THREE, LIGHT_VIEW, loadVillager, poseVillager, framePhase, loadFused, placeFused, mocapMove } from '/tools/bake/bake.mjs';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { MOVES, FUSED, ARM, armPose, SHOULDER, armLength } from '/tools/bake/arm.mjs';
+import { MOVES, MOCAP, FUSED, ARM, armPose, SHOULDER } from '/tools/bake/arm.mjs';
 import { BAKES, bakeConfig } from '/tools/bake/bakes.mjs';
 
 const $ = (s) => document.querySelector(s);
@@ -116,28 +116,50 @@ const vil = { scene: new THREE.Scene() };
 
 // ---- What the game shows: the baked sprites ---------------------------------------------------
 const gameC = $('#game'), gctx = gameC.getContext('2d');
-let vmSprites = null;
-async function unpackViewmodel() {
-  const raw = await bakedData(BAKED_VM);
-  const out = {};
-  let off = 0;
-  for (const [id, f, w, h, x0, y0] of BAKED_VM.index) { out[`${id}:${f}`] = { w, h, x0, y0, data: raw.subarray(off, off + w * h) }; off += w * h; }
-  return out;
+// Two sources: what's in the game now (game/js/data/baked/) and a staged bake waiting to be
+// approved (tools/out/staged/, written by the bakers' --stage). Each file assigns into BAKED_VM
+// or BAKED; it's run against an object of its own so the two never mix.
+async function loadBakedFile(url, holder) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) return null;
+  const obj = {};
+  new Function(holder, await r.text())(obj);
+  return obj;
 }
-const villSprites = new Map(); // name -> { meta, sprites: { 'action:frame:rot': sprite } }
-async function unpackVillager(name) {
-  if (villSprites.has(name)) return villSprites.get(name);
-  if (!BAKED[name]) {
-    await new Promise((ok, fail) => { const s = document.createElement('script'); s.src = `/game/js/data/baked/${name}.js`; s.onload = ok; s.onerror = fail; document.head.appendChild(s); }).catch(() => null);
-  }
-  const B = BAKED[name];
-  if (!B) { villSprites.set(name, null); return null; }
+async function unpackArm(B) {
+  if (!B) return null;
+  const raw = await bakedData(B), sprites = {};
+  let off = 0;
+  for (const [id, f, w, h, x0, y0] of B.index) { sprites[`${id}:${f}`] = { w, h, x0, y0, data: raw.subarray(off, off + w * h) }; off += w * h; }
+  return { sprites, phases: (id) => B.phases[B.moves[id]], moves: B.moves };
+}
+const armSources = { game: null, staged: null };
+async function loadArmSources() {
+  armSources.game = await unpackArm(await loadBakedFile('/game/js/data/baked/viewmodel.js', 'BAKED_VM'));
+  armSources.staged = await unpackArm(await loadBakedFile('/tools/out/staged/viewmodel.js', 'BAKED_VM'));
+}
+async function unpackVillagerData(B) {
+  if (!B) return null;
   const raw = await bakedData(B), sprites = {};
   let off = 0;
   for (const [action, frame, rot, w, h, ax, ay] of B.index) { sprites[`${action}:${frame}:${rot}`] = { w, h, ax, ay, data: raw.subarray(off, off + w * h) }; off += w * h; }
-  const v = { meta: B, sprites };
-  villSprites.set(name, v);
-  return v;
+  return { meta: B, sprites };
+}
+const villSources = new Map(); // name -> { game, staged }
+async function loadVillagerSources(name) {
+  if (!villSources.has(name)) {
+    const one = async (url) => { const o = await loadBakedFile(url, 'BAKED'); return unpackVillagerData(o && o[name]); };
+    villSources.set(name, { game: await one(`/game/js/data/baked/${name}.js`), staged: await one(`/tools/out/staged/${name}.js`) });
+  }
+  return villSources.get(name);
+}
+// Which source the panel shows: the staged bake when there is one for this subject.
+function pickSource(sources, has) {
+  const sel = $('#source');
+  const staged = has(sources.staged);
+  sel.querySelector('[value=staged]').disabled = !staged;
+  if (!staged) sel.value = 'game';
+  else if (!sel.dataset.touched) sel.value = 'staged';
 }
 // Palette index -> RGB, the sleeve's STONE ramp shown in the starting farm clothes' olive.
 function blit(img, s, ox, oy, scale, sleeve) {
@@ -154,19 +176,32 @@ function blit(img, s, ox, oy, scale, sleeve) {
     }
   }
 }
-function drawGameArm(id, f) {
+// The game's own choice of frame for a swing at phase t (game/js/game/viewmodel.js).
+function gameFrame(P, t) {
+  if (!P || t <= 0) return 0;
+  let f = 1;
+  while (f < P.length - 1 && P[f + 1] <= t + 0.03) f++;
+  return f;
+}
+function drawGameArm(id, t) {
+  const src = armSources[$('#source').value], f = src ? gameFrame(src.phases(id), t) : 0;
   gameC.width = 320; gameC.height = 200;
   const img = gctx.createImageData(320, 200);
   for (let y = 0; y < 200; y++) for (let x = 0; x < 320; x++) {
     const o = (y * 320 + x) * 4, sky = y < 100, k = sky ? y / 100 : (y - 100) / 100;
     img.data.set(sky ? [120 - 40 * k, 90 - 20 * k, 140 - 30 * k, 255] : [70 + 20 * k, 70 + 20 * k, 48 + 10 * k, 255], o);
   }
-  const s = vmSprites && vmSprites[`${id}:${f}`];
+  const s = src && src.sprites[`${id}:${f}`];
   if (s) blit(img, s, s.x0, s.y0, 1, true);
   gctx.putImageData(img, 0, 0);
   gctx.fillStyle = '#ff0'; gctx.fillRect(159, 99, 2, 2);
+  gctx.fillStyle = '#e8e2d6'; gctx.font = '9px sans-serif';
+  gctx.fillText(src ? `${$('#source').value === 'staged' ? 'staged' : 'in game'}: ${src.moves[id] || '?'}, frame ${f}` : 'nothing staged', 4, 10);
 }
-function drawGameVillager(v, action, f, rot) {
+function drawGameVillager(sources, action, u, rot) {
+  const v = sources && sources[$('#source').value], meta = v && v.meta.actions[action];
+  let f = 0;
+  if (meta) f = meta.loop === false ? Math.round(Math.min(u, 1) * (meta.frames - 1)) : Math.floor(u * meta.frames) % meta.frames;
   const sprites = v && v.sprites, s = sprites && sprites[`${action}:${f}:${rot}`];
   const scale = 3, W = s ? s.w * scale + 40 : 200, H = s ? s.h * scale + 40 : 120;
   gameC.width = W; gameC.height = H;
@@ -175,7 +210,7 @@ function drawGameVillager(v, action, f, rot) {
   if (s) blit(img, s, 20, 20, scale, false);
   gctx.putImageData(img, 0, 0);
   if (s) { gctx.fillStyle = 'rgba(255,211,77,.7)'; gctx.fillRect(0, 20 + s.ay * scale, W, 1); }
-  else { gctx.fillStyle = '#9a9188'; gctx.font = '12px sans-serif'; gctx.fillText('not baked yet', 60, 64); }
+  else { gctx.fillStyle = '#9a9188'; gctx.font = '12px sans-serif'; gctx.fillText(v ? 'not baked yet' : 'nothing staged', 60, 64); }
 }
 
 // ---- Subjects ---------------------------------------------------------------------------------
@@ -184,28 +219,40 @@ const state = { kind: null, id: null, action: null, t: 0, playing: true, speed: 
 let cur = null; // the loaded subject
 const fusedCache = new Map(), villCache = new Map();
 
-async function showArm(id) {
+// A move for the arm: keyframed (MOVES) or captured (MOCAP, read off its clip).
+const mocapCache2 = new Map();
+async function armMove(name) {
+  if (MOVES[name]) { const mv = MOVES[name]; return { name, kind: 'keys', pose: (t) => armPose(mv.keys, t), frames: mv.frames, keys: mv.keys.map((k) => k.at) }; }
+  if (!mocapCache2.has(name)) mocapCache2.set(name, await mocapMove(MOCAP[name]));
+  const mv = mocapCache2.get(name);
+  return { name, kind: 'mocap', pose: mv.pose, frames: mv.frames, keys: [0, 0.42, 1.15], mv };
+}
+async function showArm(id, moveName) {
   status(`Loading ${id}…`);
   const F = FUSED[id];
   if (!fusedCache.has(id)) fusedCache.set(id, await loadFused(F, ARM));
+  const move = await armMove(moveName || F.move);
   if (cur && cur.dispose) cur.dispose();
   const M = fusedCache.get(id), objs = [M.holder, M.hand.holder, ...M.sleeves];
   for (const o of objs) arm.scene.add(o);
-  const move = MOVES[F.move], it = itemByName(F.items[0]);
+  const it = itemByName(F.items[0]);
   const dur = it ? it.swing : 0.5;
   // The hand's path through the whole move, and the baked frames along it.
   const pts = [];
-  for (let i = 0; i <= 120; i++) pts.push(V3(armPose(move.keys, i / 120 * 1.15).hand));
+  for (let i = 0; i <= 120; i++) pts.push(V3(move.pose(i / 120 * 1.15).hand));
   arm.path.geometry.dispose(); arm.path.geometry = new THREE.BufferGeometry().setFromPoints(pts);
   arm.dots.clear();
-  move.frames.forEach((p, n) => { const d = ball(0.55, new THREE.Color().setHSL(n / move.frames.length * 0.8, 0.9, 0.6).getHex()); d.position.copy(V3(armPose(move.keys, p).hand)); arm.dots.add(onLayer(d)); });
+  move.frames.forEach((p, n) => { const d = ball(0.55, new THREE.Color().setHSL(n / move.frames.length * 0.8, 0.9, 0.6).getHex()); d.position.copy(V3(move.pose(p).hand)); arm.dots.add(onLayer(d)); });
+  $('#eyebox').style.display = move.kind === 'mocap' ? '' : 'none';
+  if (move.kind === 'mocap') for (const k of ['drop', 'back', 'pitch']) { $('#' + k).value = move.mv.view[k] || 0; $('#' + k + 'v').textContent = $('#' + k).value; }
+  const how = move.kind === 'mocap' ? `motion capture "${MOCAP[move.name].mocap}" (Mixamo), seen from its own eyes; the blow lands ${move.mv.impact.toFixed(2)} s into the clip` : 'keyframed';
   cur = {
     kind: 'arm', id, M, move, dur, span: 1.15,
-    frames: move.frames, // phases
-    keys: move.keys.map((k) => k.at),
+    frames: move.frames, keys: move.keys,
     dispose() { for (const o of objs) arm.scene.remove(o); },
-    describe: `${F.items.join(' / ')}: the ${F.move} (a swing takes ${dur.toFixed(2)} s in the game; the blow lands at phase 0.42)`,
+    describe: `${F.items.join(' / ')}: ${move.name} (${how}). A swing takes ${dur.toFixed(2)} s in the game; the blow lands at phase 0.42`,
   };
+  pickSource(armSources, (v) => v && v.sprites[`${id}:0`]);
   outCam.position.set(38, 14, 22); controls.target.set(3, -4, -12); controls.update();
   status('');
 }
@@ -225,8 +272,9 @@ async function showVillager(name, actionId) {
   const Vl = villCache.get(key), M = Vl.M;
   vil.scene.add(M.holder);
   let skel = null;
-  const baked = await unpackVillager(name);
-  const meta = baked && baked.meta.actions[A.id];
+  const baked = await loadVillagerSources(name);
+  pickSource(baked, (v) => v && v.meta.actions[A.id]);
+  const meta = baked.game && baked.game.meta.actions[A.id];
   cur = {
     kind: 'villager', id: name, action: A.id, V: Vl, A, cfg, baked,
     span: 1, dur: Vl.period,
@@ -237,7 +285,7 @@ async function showVillager(name, actionId) {
       if (on && !skel) { skel = new THREE.SkeletonHelper(M.model); vil.scene.add(skel); }
       if (!on && skel) { vil.scene.remove(skel); skel = null; }
     },
-    describe: `${name}, ${A.id}: ${A.clip.startsWith('@') ? `scripted (${A.clip.slice(1)}) over the idle pose` : A.clip.startsWith('!') ? `scripted (${A.clip.slice(1)}) over the standing pose` : `Tripo's "${A.clip}" animation`}, ${A.frames} baked frames${A.once ? ', plays once' : ', loops'}; ${Vl.period.toFixed(2)} s${meta ? ` (in game ${(A.frames / meta.fps).toFixed(2)} s)` : ''}`,
+    describe: `${name}, ${A.id}: ${A.clip.startsWith('~') ? `motion capture "${A.clip.slice(1)}" (Mixamo), retargeted` : A.clip.startsWith('@') ? `scripted (${A.clip.slice(1)}) over the idle pose` : A.clip.startsWith('!') ? `scripted (${A.clip.slice(1)}) over the standing pose` : `Tripo's "${A.clip}" animation`}, ${A.frames} baked frames${A.once ? ', plays once' : ', loops'}; ${Vl.period.toFixed(2)} s${meta ? ` (in game ${(A.frames / meta.fps).toFixed(2)} s)` : ''}`,
   };
   cur.setSkeleton($('#skeleton').checked);
   vil.anvil.visible = name === 'tobin';
@@ -261,7 +309,7 @@ function buildList() {
   };
   section('Your arm', Object.entries(FUSED).map(([id, F]) => ['arm', id, F.items[0], F.move]));
   const cast = Object.entries(BAKES).filter(([, b]) => !b.beast), beasts = Object.entries(BAKES).filter(([, b]) => b.beast);
-  const note = (b) => (b.actions.includes('@') ? b.actions.match(/@(\w+)/g).join(' ').replace(/@/g, '') : '');
+  const note = (b) => [...(b.actions.match(/@\w+/g) || []).map((m) => m.slice(1)), ...(b.actions.includes('~') ? ['mocap'] : [])].filter((v, i, a) => a.indexOf(v) === i).join(' ');
   section('Villagers', cast.map(([id, b]) => ['villager', id, id[0].toUpperCase() + id.slice(1), note(b)]));
   section('Animals', beasts.map(([id]) => ['villager', id, id[0].toUpperCase() + id.slice(1), '']));
 }
@@ -272,27 +320,35 @@ async function select(kind, id, actionId) {
   for (const e of document.querySelectorAll('.vill-only')) e.style.display = kind === 'villager' ? '' : 'none';
   const sel = $('#action');
   if (kind === 'arm') {
-    $('#action-wrap').style.display = 'none';
-    await showArm(id);
+    // Every move can be tried with every weapon; the one the weapon uses is marked.
+    const pick = actionId || FUSED[id].move;
+    const opt = (n, label) => `<option value="${n}"${n === pick ? ' selected' : ''}>${label}${n === FUSED[id].move ? ' (in use)' : ''}</option>`;
+    sel.innerHTML = Object.keys(MOVES).map((n) => opt(n, `${n} (keyframed)`)).join('') + Object.entries(MOCAP).map(([n, m]) => opt(n, `${n} (mocap: ${m.mocap})`)).join('');
+    $('#action-wrap').style.display = '';
+    await showArm(id, pick);
   } else {
     const cfg = bakeConfig(id);
     // Scripted moves first: they're the ones to look at.
-    const acts = cfg.actions.slice().sort((a, b) => (/[@!]/.test(b.clip) && b.clip !== '!rest') - (/[@!]/.test(a.clip) && a.clip !== '!rest'));
+    const acts = cfg.actions.slice().sort((a, b) => (/[@!~]/.test(b.clip) && b.clip !== '!rest') - (/[@!~]/.test(a.clip) && a.clip !== '!rest'));
     const pick = actionId || (state.id === id && state.action) || acts[0].id;
     sel.innerHTML = acts.map((a) => `<option value="${a.id}"${a.id === pick ? ' selected' : ''}>${a.id} (${a.clip})</option>`).join('');
     $('#action-wrap').style.display = '';
     await showVillager(id, pick);
   }
-  Object.assign(state, { kind, id, action: kind === 'villager' ? $('#action').value : null, t: 0, hold: 0 });
+  Object.assign(state, { kind, id, action: $('#action').value, t: 0, hold: 0 });
   $('#out-title').textContent = kind === 'arm' ? 'From outside: the head, its view (blue), shoulder and upper arm (yellow), forearm (red), palm (green), weapon (blue). Drag to turn, right-drag to pan, scroll to zoom'
     : 'Live 3D: drag to turn, right-drag to pan, scroll to zoom. Red and blue balls: where a scripted move sends the right and left wrists';
-  $('#game-title').textContent = kind === 'arm' ? 'In the game: the baked frame shown at this point of the swing' : 'In the game: the baked frame, from the chosen side';
+  $('#game-title').textContent = kind === 'arm' ? 'The baked frame at this point of the swing: the staged bake or the one in the game, chosen above' : 'The baked frame, from the chosen side: the staged bake or the one in the game, chosen above';
   $('#rots').style.display = kind === 'villager' ? '' : 'none';
   drawTicks();
-  const hash = `#${kind}/${id}${kind === 'villager' ? '/' + state.action : ''}`;
+  const hash = `#${kind}/${id}/${state.action}`;
   if (location.hash !== hash) history.replaceState(null, '', hash);
 }
-$('#action').addEventListener('change', async () => { state.action = $('#action').value; await showVillager(state.id, state.action); state.t = 0; drawTicks(); history.replaceState(null, '', `#villager/${state.id}/${state.action}`); });
+$('#action').addEventListener('change', async () => {
+  state.action = $('#action').value;
+  if (state.kind === 'arm') await showArm(state.id, state.action); else await showVillager(state.id, state.action);
+  state.t = 0; drawTicks(); history.replaceState(null, '', `#${state.kind}/${state.id}/${state.action}`);
+});
 
 // Eight sides to view the baked sprite from.
 {
@@ -381,11 +437,12 @@ function frame(now) {
   const guides = $('#guides').checked, setting = $('#setting').checked;
   let read = `<b>${cur.describe}</b>\n`;
   if (cur.kind === 'arm') {
-    const fr = armPose(cur.move.keys, Math.min(t, 1.15));
+    const fr = cur.move.pose(Math.min(t, 1.15));
     placeFused(cur.M, cur.M.F, fr, ARM);
     // Guides
     const E = V3(fr.elbow), H = V3(fr.hand);
-    arm.elbow.position.copy(E); setLine(arm.upper, V3(SHOULDER), E);
+    arm.elbow.position.copy(E); setLine(arm.upper, V3(fr.shoulder || SHOULDER), E);
+    arm.shoulder.position.copy(V3(fr.shoulder || SHOULDER));
     arm.foreArrow.position.copy(E); arm.foreArrow.setDirection(V3(fr.fore));
     arm.palmArrow.position.copy(H); arm.palmArrow.setDirection(V3(fr.palm).projectOnPlane(V3(fr.fore)).normalize());
     arm.weaponArrow.visible = !!fr.weapon;
@@ -396,12 +453,13 @@ function frame(now) {
     eyeR.render(arm.scene, eyeCam);
     sizeTo(outR, outCam, $('#out'), false);
     outR.render(arm.scene, outCam);
-    drawGameArm(cur.id, f);
+    drawGameArm(cur.id, state.t);
     $('#phase').textContent = `phase ${t.toFixed(3)} / 1.15 · frame ${f}`;
-    read += `keyframe ${fr.key} → ${fr.key + 1} (at ${cur.keys[fr.key]} → ${cur.keys[fr.key + 1]})\n`
-      + `elbow ${vec(fr.elbow)}   forearm ${vec(fr.fore)}   upper arm ${armLength(fr).toFixed(1)} long (real 11)\n`
+    const upper = V3(fr.elbow).distanceTo(V3(fr.shoulder || SHOULDER));
+    read += (cur.move.kind === 'mocap' ? `clip time ${cur.move.mv.at(Math.min(t, 1.15)).toFixed(2)} s\n` : `keyframe ${fr.key} → ${fr.key + 1} (at ${cur.keys[fr.key]} → ${cur.keys[fr.key + 1]})\n`)
+      + `elbow ${vec(fr.elbow)}   forearm ${vec(fr.fore)}   upper arm ${upper.toFixed(1)} long\n`
       + `hand  ${vec(fr.hand)}   palm ${vec(fr.palm)}   weapon ${vec(fr.weapon)}\n`
-      + `camera space, game units: x right, y up, -z ahead; the eye at the origin, the shoulder at ${vec(SHOULDER)}`;
+      + `camera space, game units: x right, y up, -z ahead; the eye at the origin, the shoulder at ${vec(fr.shoulder || SHOULDER)}`;
   } else {
     const targets = poseVillager(cur.V, Math.min(t, 1));
     vil.extras.clear();
@@ -413,7 +471,7 @@ function frame(now) {
     vil.guides.visible = guides; vil.setting.visible = setting;
     sizeTo(outR, outCam, $('#out'), false);
     outR.render(vil.scene, outCam);
-    drawGameVillager(cur.baked, cur.A.id, f, state.rot);
+    drawGameVillager(cur.baked, cur.A.id, t, state.rot);
     $('#phase').textContent = `phase ${t.toFixed(3)} / 1 · frame ${f} of ${cur.A.frames}`;
     const H = (v) => (v ? vec(v.toArray().map((x) => x / h)) : '—');
     if (targets) read += `wrist targets, in heights (x to their left, y up, z ahead): right ${H(targets.R)}   left ${H(targets.L)}\n`;
@@ -429,12 +487,22 @@ $('#legend').innerHTML = '';
 for (const id of ['#guides', '#setting', '#skeleton']) $(id).addEventListener('change', () => { if (id === '#skeleton' && cur && cur.setSkeleton) cur.setSkeleton($(id).checked); });
 window.addEventListener('resize', drawTicks);
 buildList();
-unpackViewmodel().then((s) => { vmSprites = s; }).catch((e) => console.error(e));
+$('#source').addEventListener('change', () => { $('#source').dataset.touched = '1'; });
+// The capture's camera: lower, further back, looking down. Moves the guides with it.
+for (const k of ['drop', 'back', 'pitch']) $('#' + k).addEventListener('input', () => {
+  $('#' + k + 'v').textContent = $('#' + k).value;
+  if (!cur || cur.kind !== 'arm' || cur.move.kind !== 'mocap') return;
+  cur.move.mv.view[k] = +$('#' + k).value;
+  const pts = [];
+  for (let i = 0; i <= 120; i++) pts.push(V3(cur.move.pose(i / 120 * 1.15).hand));
+  arm.path.geometry.dispose(); arm.path.geometry = new THREE.BufferGeometry().setFromPoints(pts);
+  cur.move.frames.forEach((p, n) => arm.dots.children[n] && arm.dots.children[n].position.copy(V3(cur.move.pose(p).hand)));
+});
 // The address names what's shown (#arm/hammer, #villager/tobin/work), so a view can be linked to.
 function fromHash() {
   const [kind, id, action] = (location.hash.slice(1) || 'arm/hammer').split('/');
   if (kind === state.kind && id === state.id && (!action || action === state.action)) return Promise.resolve();
-  return select(kind === 'villager' ? 'villager' : 'arm', id || 'hammer', action);
+  return select(kind === 'villager' ? 'villager' : 'arm', id || 'hammer', action && decodeURIComponent(action));
 }
 window.addEventListener('hashchange', fromHash);
-fromHash().then(() => requestAnimationFrame(frame));
+loadArmSources().catch((e) => console.error(e)).then(fromHash).then(() => requestAnimationFrame(frame));

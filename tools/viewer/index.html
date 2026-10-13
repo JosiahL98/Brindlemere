@@ -72,6 +72,8 @@
   <main>
     <div id="bar">
       <label id="action-wrap">Action <select id="action"></select></label>
+      <label>Game panel <select id="source"><option value="staged">staged bake (not in the game yet)</option><option value="game">in the game now</option></select></label>
+      <span id="eyebox" class="arm-only" style="display:none">Camera: lower <input type="range" id="drop" min="0" max="60" value="0" style="width:70px"> <b id="dropv">0</b> cm, back <input type="range" id="back" min="0" max="80" value="0" style="width:70px"> <b id="backv">0</b> cm, looking down <input type="range" id="pitch" min="0" max="45" value="0" style="width:70px"> <b id="pitchv">0</b>°</span>
       <label><input type="checkbox" id="snap"> Baked frames only</label>
       <label class="arm-only"><input type="checkbox" id="pixel"> Game resolution</label>
       <label><input type="checkbox" id="guides" checked> Guides</label>
@@ -82,7 +84,7 @@
     <div id="views">
       <section class="view" id="v-eye"><h3>Through your eyes (the game's camera)</h3><div class="canvas-wrap"><canvas id="eye"></canvas></div></section>
       <section class="view" id="v-out"><h3 id="out-title">From outside: drag to turn, right-drag to pan, scroll to zoom</h3><div class="canvas-wrap"><canvas id="out"></canvas></div></section>
-      <section class="view" id="v-game"><h3 id="game-title">In the game: the baked frame</h3><div class="canvas-wrap"><canvas id="game"></canvas><div id="rots"></div></div></section>
+      <section class="view" id="v-game"><h3 id="game-title">The baked frame</h3><div class="canvas-wrap"><canvas id="game"></canvas><div id="rots"></div></div></section>
     </div>
     <div id="timeline">
       <div id="transport">
@@ -101,7 +103,6 @@
 <script src="/js/palette.js"></script>
 <script src="/game/js/data/items.js"></script>
 <script src="/game/js/data/baked.js"></script>
-<script src="/game/js/data/baked/viewmodel.js"></script>
 <script type="module" src="/tools/viewer/viewer.mjs"></script>
 </body>
 </html>

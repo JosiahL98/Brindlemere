@@ -266,11 +266,143 @@ function gripOf(M, side, h) {
 function placePole(M, P, h, twoHands) {
   const R = gripOf(M, 'R', h);
   let butt, axis;
-  if (twoHands) { axis = gripOf(M, 'L', h).sub(R).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
+  if (twoHands === 'auto') twoHands = gripOf(M, 'L', h).distanceTo(R) < 0.3 * h ? true : 'forearm';
+  if (twoHands === 'forearm') { axis = R.clone().sub(worldPos(boneNamed(M, 'R_Forearm'))).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
+  else if (twoHands) { axis = gripOf(M, 'L', h).sub(R).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
   else { axis = new THREE.Vector3(0, 1, 0); butt = new THREE.Vector3(R.x, 0.01 * h, R.z); }
   P.g.position.copy(butt);
   P.g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
   P.g.updateMatrixWorld(true);
+}
+
+// ---- Motion capture ---------------------------------------------------------------------------
+// Moves captured from real people (Mixamo, assets/adobemokap/<name>.fbx) played on the Tripo
+// villagers. Each mapped bone is first turned to point the way the Mixamo bone does at rest (a
+// T-pose against Tripo's A-pose), then given the same turn from rest, in world space, as the
+// captured bone has at that moment. The hips' movement is scaled to the villager's size.
+const MIXAMO = {
+  Hips: 'Hip', Spine: 'Waist', Spine1: 'Spine01', Spine2: 'Spine02', Neck: 'NeckTwist01', Head: 'Head',
+  LeftShoulder: 'L_Clavicle', LeftArm: 'L_Upperarm', LeftForeArm: 'L_Forearm', LeftHand: 'L_Hand',
+  RightShoulder: 'R_Clavicle', RightArm: 'R_Upperarm', RightForeArm: 'R_Forearm', RightHand: 'R_Hand',
+  LeftUpLeg: 'L_Thigh', LeftLeg: 'L_Calf', LeftFoot: 'L_Foot', LeftToeBase: 'L_ToeBase',
+  RightUpLeg: 'R_Thigh', RightLeg: 'R_Calf', RightFoot: 'R_Foot', RightToeBase: 'R_ToeBase',
+};
+// The next bone along from each, which gives its direction (none: it turns like its parent).
+const MIXAMO_NEXT = { Hips: 'Spine', Spine: 'Spine1', Spine1: 'Spine2', Spine2: 'Neck', Neck: 'Head', LeftShoulder: 'LeftArm', LeftArm: 'LeftForeArm', LeftForeArm: 'LeftHand',
+  RightShoulder: 'RightArm', RightArm: 'RightForeArm', RightForeArm: 'RightHand', LeftUpLeg: 'LeftLeg', LeftLeg: 'LeftFoot', LeftFoot: 'LeftToeBase', RightUpLeg: 'RightLeg', RightLeg: 'RightFoot', RightFoot: 'RightToeBase' };
+const INHERIT = { Head: 'Neck', LeftHand: 'LeftForeArm', RightHand: 'RightForeArm', LeftToeBase: 'LeftFoot', RightToeBase: 'RightFoot' };
+const mocapCache = new Map();
+async function loadMocap(name) {
+  if (mocapCache.has(name)) return mocapCache.get(name);
+  const { FBXLoader } = await import('three/addons/loaders/FBXLoader.js');
+  const obj = await new FBXLoader().loadAsync(`/assets/adobemokap/${encodeURIComponent(name)}.fbx`);
+  const clip = obj.animations[0];
+  if (!clip || !clip.tracks.length) throw new Error(`${name}.fbx has no animation in it`);
+  const bone = (n) => obj.getObjectByName('mixamorig' + n);
+  // The rest (bind) pose, before the clip takes over the bones.
+  obj.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.pose(); });
+  obj.updateMatrixWorld(true);
+  const rest = {};
+  obj.traverse((o) => { if (o.isBone) rest[o.name.replace('mixamorig', '')] = { q: o.getWorldQuaternion(new THREE.Quaternion()), p: o.getWorldPosition(new THREE.Vector3()) }; });
+  const mixer = new THREE.AnimationMixer(obj);
+  mixer.clipAction(clip).play();
+  const D = { name, obj, clip, mixer, bone, rest, duration: clip.duration };
+  mocapCache.set(name, D);
+  return D;
+}
+function mocapAt(D, t) { D.mixer.setTime(Math.max(0, Math.min(t, D.duration - 1e-4))); D.obj.updateMatrixWorld(true); }
+// How each of a villager's bones lines up with the capture's, worked out once.
+function retargetSetup(M, D) {
+  bindPose(M);
+  const T = {}, wp = (o) => o.getWorldPosition(new THREE.Vector3());
+  for (const [mn, tn] of Object.entries(MIXAMO)) {
+    const tb = M.model.getObjectByName(tn);
+    if (!tb || !D.rest[mn]) continue;
+    const e = { tb, q0: tb.getWorldQuaternion(new THREE.Quaternion()), A: null };
+    const sn = MIXAMO_NEXT[mn], tn2 = sn && MIXAMO[sn], tc = tn2 && M.model.getObjectByName(tn2);
+    if (tc && D.rest[sn]) e.A = new THREE.Quaternion().setFromUnitVectors(wp(tc).sub(wp(tb)).normalize(), D.rest[sn].p.clone().sub(D.rest[mn].p).normalize());
+    T[mn] = e;
+  }
+  for (const [c, p] of Object.entries(INHERIT)) if (T[c] && !T[c].A) T[c].A = T[p] && T[p].A ? T[p].A.clone() : new THREE.Quaternion();
+  for (const e of Object.values(T)) if (!e.A) e.A = new THREE.Quaternion();
+  // The hips: where they rest, and how far the capture's hips are off the ground in villager terms.
+  const hip = M.model.getObjectByName('Hip');
+  const ground = Math.min(...['LeftToeBase', 'RightToeBase', 'LeftFoot', 'RightFoot'].filter((n) => D.rest[n]).map((n) => D.rest[n].p.y));
+  return Object.assign(T, { hipRest: wp(hip), hipScale: (wp(hip).y - worldBox(M).min.y) / (D.rest.Hips.p.y - ground) });
+}
+function retarget(M, D, T, t) {
+  mocapAt(D, t);
+  bindPose(M);
+  for (const mn of Object.keys(MIXAMO)) {
+    const e = T[mn];
+    if (!e) continue;
+    const qt = D.bone(mn).getWorldQuaternion(new THREE.Quaternion()).multiply(D.rest[mn].q.clone().invert()).multiply(e.A).multiply(e.q0);
+    e.tb.quaternion.copy(e.tb.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(qt));
+    e.tb.updateMatrixWorld(true);
+  }
+  // The hips move as the capture's do, scaled.
+  const hip = T.Hips && T.Hips.tb;
+  if (hip) {
+    const d = D.bone('Hips').getWorldPosition(new THREE.Vector3()).sub(D.rest.Hips.p).multiplyScalar(T.hipScale);
+    hip.position.copy(hip.parent.worldToLocal(T.hipRest.clone().add(d)));
+    hip.updateMatrixWorld(true);
+  }
+  M.holder.updateMatrixWorld(true);
+}
+
+// The first-person arm from a capture: the camera at the captured body's eyes (following the head
+// but always looking straight ahead, as the player's view does), and the right arm read off it in
+// camera space and game units: shoulder, elbow, wrist, the fist's middle, which way the palm
+// faces (from the finger bones) and the grip, which runs from the little finger to the index
+// finger, tipped a little towards the fingertips, the way a handle crosses a closed fist.
+const EYE_HEIGHT = 50; // the player's eye height in game units
+// view: where the camera sits against the real eyes, as first-person games do to keep the arms in
+// sight: drop and back in centimetres, pitch in degrees looking down.
+function mocapArm(D, t, view = {}) {
+  if (!D.eye) {
+    // Eyes: between the head bone and the top of the head, a little in front.
+    const h = D.rest.Head.p, top = D.rest.HeadTop_End ? D.rest.HeadTop_End.p : h.clone().add(new THREE.Vector3(0, 18, 0));
+    const ground = Math.min(...['LeftToeBase', 'RightToeBase'].filter((n) => D.rest[n]).map((n) => D.rest[n].p.y), 0);
+    D.eyeOffset = top.clone().sub(h).multiplyScalar(0.45).add(new THREE.Vector3(0, 0, 0.06 * (top.y - ground)));
+    D.k = EYE_HEIGHT / (h.y + D.eyeOffset.y - ground);
+    D.eye = true;
+  }
+  mocapAt(D, t);
+  const eye = D.bone('Head').getWorldPosition(new THREE.Vector3()).add(D.eyeOffset).add(new THREE.Vector3(0, -(view.drop || 0), -(view.back || 0)));
+  // Facing +z, the body's right is -x: camera space is the capture turned half round, scaled, and
+  // tipped for a camera looking down.
+  const th = (view.pitch || 0) * Math.PI / 180, c = Math.cos(th), sn = Math.sin(th);
+  const cam = (n) => { const p = D.bone(n).getWorldPosition(new THREE.Vector3()).sub(eye).multiplyScalar(D.k), y = p.y, z = -p.z; return new THREE.Vector3(-p.x, y * c - z * sn, y * sn + z * c); };
+  const S = cam('RightArm'), E = cam('RightForeArm'), W = cam('RightHand'), I = cam('RightHandIndex1'), Mi = cam('RightHandMiddle1'), Pi = cam('RightHandPinky1');
+  const f = Mi.clone().sub(W).normalize(), ip = I.clone().sub(Pi).normalize(); // directions turn with the camera too
+  const palm = ip.clone().cross(f).normalize();
+  const hand = W.clone().lerp(Mi, 0.7).addScaledVector(palm, 0.8);
+  const weapon = ip.clone().multiplyScalar(Math.cos(0.26)).addScaledVector(f, Math.sin(0.26)).normalize();
+  const arr = (v) => v.toArray();
+  return { shoulder: arr(S), elbow: arr(E), hand: arr(hand), fore: arr(W.clone().sub(E).normalize()), palm: arr(palm), weapon: arr(weapon) };
+}
+// A captured attack's frames for the game's swing: phase 0 is the guard at `start`, the blow
+// lands at phase 0.42 (the clip's `impact`, or when the fist moves fastest) and the swing is over
+// at phase 1.15 (`end`). Times in seconds of the clip.
+function mocapImpact(D, mv) {
+  if (mv.impact != null) return mv.impact;
+  let best = mv.start, fast = -1, prev = null;
+  for (let t = mv.start; t <= mv.end; t += 1 / 60) {
+    const h = V3(mocapArm(D, t, mv.view).hand);
+    if (prev && h.distanceTo(prev) > fast) { fast = h.distanceTo(prev); best = t; }
+    prev = h;
+  }
+  return best;
+}
+async function mocapMove(mv) {
+  const D = await loadMocap(mv.mocap);
+  const m = Object.assign({ start: 0, end: D.duration }, mv);
+  m.impact = mocapImpact(D, m);
+  m.at = (p) => (p <= 0.42 ? m.start + (m.impact - m.start) * Math.max(0, p) / 0.42 : m.impact + (m.end - m.impact) * Math.min(1, (p - 0.42) / 0.73));
+  m.view = mv.view || {};
+  m.pose = (p) => mocapArm(D, m.at(p), m.view);
+  m.D = D;
+  return m;
 }
 
 // ---- Animals ----------------------------------------------------------------------------------
@@ -320,7 +452,8 @@ function beastPose(M, kind, u, h, base, cfg) {
 // stood at the origin, any pole they hold, and how long the move takes.
 async function loadVillager(cfg, A, scale) {
   const script = A.clip.startsWith('@') ? SCRIPTS[A.clip.slice(1)] : null, beast = A.clip.startsWith('!') ? A.clip.slice(1) : null;
-  const M = await loadModel(`/assets/tripo/${cfg.name}/anim-${script ? 'idle' : beast ? 'walk' : A.clip}.glb`);
+  const mocap = A.clip.startsWith('~') ? await loadMocap(A.clip.slice(1)) : null;
+  const M = await loadModel(`/assets/tripo/${cfg.name}/anim-${script || mocap ? 'idle' : beast ? 'walk' : A.clip}.glb`);
   const pole = cfg.prop ? makePole(cfg.prop, cfg.height) : null;
   if (pole) M.extras = [pole.g];
   const rest = () => { poseAt(M, 0); if (beast) bindPose(M); };
@@ -337,17 +470,19 @@ async function loadVillager(cfg, A, scale) {
   const rest0 = bones(M.model).map((b) => [b, b.position.clone(), b.quaternion.clone(), b.scale.clone()]);
   M.rest = () => { for (const [b, p, q, sc] of rest0) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(sc); } M.holder.updateMatrixWorld(true); };
   // A strike uses the first swing of a preset that may repeat it several times.
-  const period = script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
-  return { M, pole, base, period, script, beast, A, cfg };
+  const period = mocap ? mocap.duration : script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
+  const T = mocap ? retargetSetup(M, mocap) : null;
+  return { M, pole, base, period, script, beast, mocap, T, A, cfg };
 }
 // Poses it at phase u (0..1 through the move); returns the IK targets of a scripted move.
 function poseVillager(V, u) {
-  const { M, pole, base, period, script, beast, A, cfg } = V;
+  const { M, pole, base, period, script, beast, mocap, T, A, cfg } = V;
   let targets = null;
-  if (script) { M.rest(); targets = applyScript(M, script, u, cfg.height); }
+  if (mocap) retarget(M, mocap, T, u * period);
+  else if (script) { M.rest(); targets = applyScript(M, script, u, cfg.height); }
   else if (beast) beastPose(M, beast, u, cfg.height, base, cfg);
   else poseAt(M, A.once ? u * period * 0.92 : u * period);
-  if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
+  if (pole) placePole(M, pole, cfg.height, mocap ? 'auto' : !!(script && script.keys[0].L));
   return targets;
 }
 // The phase of each baked frame of an action.
@@ -498,7 +633,7 @@ function placeFused(M, F, fr, cfg) {
   const cut = h.distanceTo(e) * k * 0.8;
   M.clip.normal.copy(A);
   M.clip.constant = -H.dot(A) + cut;
-  const C = H.clone().sub(A.clone().multiplyScalar(cut - 0.3)), E = V3(fr.elbow), S = V3(cfg.shoulder);
+  const C = H.clone().sub(A.clone().multiplyScalar(cut - 0.3)), E = V3(fr.elbow), S = V3(fr.shoulder || cfg.shoulder);
   const tube = (mesh, a, b, r0, r1) => {
     const d = b.clone().sub(a), l = d.length();
     mesh.position.copy(a).add(b).multiplyScalar(0.5);
@@ -663,6 +798,8 @@ window.bakeViewmodel = async (cfg) => {
       }
       continue;
     }
+    // A captured move (tools/bake/arm.mjs MOCAP) is read off its clip here, at the move's phases.
+    if (!cfg.moves[F.move] && cfg.mocap[F.move]) { const mv = await mocapMove(cfg.mocap[F.move]); cfg.moves[F.move] = mv.frames.map(mv.pose); }
     out.fused[id] = cfg.moves[F.move].map((fr) => {
       placeFused(M, F, fr, cfg);
       const raw = [];
@@ -764,4 +901,4 @@ window.orthoViews = async (url, px) => {
 };
 
 // For the motion viewer (tools/viewer/), which poses the same models the same way.
-export { THREE, LIGHT_VIEW, loadModel, poseAt, bindPose, worldBox, bones, SCRIPTS, applyScript, loadVillager, poseVillager, framePhase, loadFused, placeFused };
+export { THREE, LIGHT_VIEW, loadModel, poseAt, bindPose, worldBox, bones, SCRIPTS, applyScript, loadVillager, poseVillager, framePhase, loadFused, placeFused, loadMocap, mocapAt, mocapMove };

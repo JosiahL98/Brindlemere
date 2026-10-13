@@ -23,9 +23,9 @@ const stage = process.argv.includes('--stage');
 
 (async () => {
   // The arm, its moves and its models live in tools/bake/arm.mjs (shared with tools/viewer/).
-  const { FUSED, ARM, MOVES, sampleMoves, armLength } = await import('./bake/arm.mjs');
+  const { FUSED, ARM, MOVES, MOCAP, sampleMoves, armLength } = await import('./bake/arm.mjs');
   const moves = sampleMoves();
-  const cfg = Object.assign({ ss: 4, preview: preview || calibrate, rawFull: big, calibrate, moves, fused: JSON.parse(JSON.stringify(FUSED)) }, ARM);
+  const cfg = Object.assign({ ss: 4, preview: preview || calibrate, rawFull: big, calibrate, moves, mocap: MOCAP, fused: JSON.parse(JSON.stringify(FUSED)) }, ARM);
   if (process.env.VM_ONLY) { const keep = process.env.VM_ONLY.split(','); for (const id of Object.keys(cfg.fused)) if (!keep.includes(id)) delete cfg.fused[id]; }
   if (process.env.VM_MOVE) for (const F of Object.values(cfg.fused)) F.move = process.env.VM_MOVE;
   const t0 = Date.now();
@@ -60,7 +60,7 @@ const stage = process.argv.includes('--stage');
     frames.forEach((s, f) => { index.push([id, f, s.w, s.h, s.x0, s.y0]); parts.push(Buffer.from(Uint8Array.from(s.data))); });
   }
   const phases = {};
-  for (const [id, M] of Object.entries(MOVES)) phases[id] = M.frames;
+  for (const [id, M] of Object.entries(Object.assign({}, MOVES, MOCAP))) phases[id] = M.frames;
   const raw = Buffer.concat(parts), packed = zlib.deflateRawSync(raw, { level: 9 });
   const out = stage ? path.join(root, 'tools', 'out', 'staged', 'viewmodel.js') : path.join(root, 'game', 'js', 'data', 'baked', 'viewmodel.js');
   fs.mkdirSync(path.dirname(out), { recursive: true });
