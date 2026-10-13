@@ -1,10 +1,10 @@
-// Dev tool: bakes a Tripo-generated, rigged and animated villager (assets/tripo/<name>/) into
-// game sprites, using three.js in headless Chrome (tools/bake/). Writes
-// game/js/data/baked/<name>.js and a contact sheet at tools/out/baked-<name>.png.
-//   node tools/bake-mesh.js elsa [--height 58] [--res 2.5] [--actions idle=idle:4,walk=walk:8:cycle,talk=agree:4]
-//   (an action is id=clip:frames, optionally :cycle to find the loop in a long clip, or :once for a strike;
-//   a clip named @hammer, @thrust or @fork is posed by script over the idle clip instead)
-//   --prop spear|pitchfork  gives the villager a pole to hold
+// Dev tool: bakes a Tripo-generated, rigged and animated villager or animal (assets/tripo/<name>/)
+// into game sprites, using three.js in headless Chrome (tools/bake/). Writes
+// game/js/data/baked/<name>.js, a contact sheet at tools/out/baked-<name>.png and one per action.
+//   node tools/bake-mesh.js tobin
+// Each one's height, pole and actions are in tools/bake/bakes.mjs; any can be overridden:
+//   node tools/bake-mesh.js elsa --height 58 --res 2.5 --actions idle=idle:4,walk=walk:8:cycle
+//   --prop spear|pitchfork, --wide, --foot, --flip, --no-portrait (see bakes.mjs), --raw
 // Needs `npm install` in tools/ (three, puppeteer-core) and Chrome.
 'use strict';
 const fs = require('fs');
@@ -16,32 +16,18 @@ const puppeteer = require('puppeteer-core');
 
 const root = path.join(__dirname, '..');
 const args = process.argv.slice(2);
-const opt = (n, d) => { const i = args.indexOf('--' + n); if (i < 0) return d; const v = args[i + 1]; args.splice(i, 2); return v; };
-const height = +opt('height', 58);
-const res = +opt('res', 1.5); // sprite pixels per world unit (villagers sculpted at runtime use 1.5)
-const actionSpec = opt('actions', 'idle=idle:6,walk=walk:8:cycle,talk=agree:6');
-const prop = opt('prop', null); // spear or pitchfork: a pole held in the hands (see tools/bake/bake.mjs)
-// Animals: --wide (frame half-width, in heights), --foot (the bone whose sweep gives the walk's
-// stride), --flip (dies on its back). Actions named !rest, !lunge, !flinch, !die are posed by script.
-const wide = +opt('wide', 0.45), foot = opt('foot', 'L_Foot'), flip = args.includes('--flip');
-if (flip) args.splice(args.indexOf('--flip'), 1);
-const chrome = opt('chrome', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
+const opt = (n) => { const i = args.indexOf('--' + n); if (i < 0) return undefined; const v = args[i + 1]; args.splice(i, 2); return v; };
+const flag = (n) => { const i = args.indexOf('--' + n); if (i < 0) return false; args.splice(i, 1); return true; };
+const over = {};
+for (const k of ['height', 'res', 'wide']) { const v = opt(k); if (v !== undefined) over[k] = +v; }
+for (const k of ['actions', 'prop', 'foot']) { const v = opt(k); if (v !== undefined) over[k] = v; }
+if (flag('flip')) over.flip = true;
+if (flag('no-portrait')) over.noPortrait = true;
+const debugRaw = flag('raw');
+const chrome = opt('chrome') || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const name = args[0];
 if (!name) { console.error('usage: node tools/bake-mesh.js <name> [--height 58] [--actions ...]'); process.exit(1); }
-
-const cfg = {
-  name, height, res, ss: 4, pitchDeg: 9, prop, wide, foot, flip,
-  actions: actionSpec.split(',').map((s) => {
-    // flags: cycle (find the loop inside a longer clip), once (plays through once, e.g. a strike)
-    // An optional 4th field speeds playback up (work=chop:6:cycle:2.5).
-    const [id, rest] = s.split('='); const [clip, frames, flag, speed] = rest.split(':');
-    return { id, clip, frames: +frames, cycle: flag === 'cycle', once: flag === 'once', speed: +speed || 1 };
-  }),
-  // Head and shoulders for the dialogue panel, framed like renderPortrait() (not for animals).
-  portrait: args.includes('--no-portrait') ? null : { res: 3, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },
-  light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.72, dither: 9 },
-  debugRaw: args.includes('--raw'),
-};
+let cfg; // from tools/bake/bakes.mjs, filled in before baking
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.glb': 'model/gltf-binary', '.json': 'application/json' };
 function serve() {
@@ -87,6 +73,8 @@ function sheet(result, file) {
 }
 
 (async () => {
+  const { bakeConfig } = await import('./bake/bakes.mjs');
+  cfg = Object.assign(bakeConfig(name, over), { ss: 4, pitchDeg: 9, debugRaw, light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.72, dither: 9 } });
   const server = await serve();
   const url = `http://127.0.0.1:${server.address().port}/tools/bake/bake.html`;
   const browser = await puppeteer.launch({ executablePath: chrome, headless: 'new', args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });

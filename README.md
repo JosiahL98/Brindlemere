@@ -50,7 +50,7 @@ On touch screens, an on-screen stick, a look pad and buttons appear.
 - **The world** is drawn into a 320×200, 256-colour frame buffer (`game/js/render.js`). Each pixel casts its own ray through the tile grid, so the camera can tilt all the way up or down with true perspective, not the usual raycaster shear. Walls can have several heights, and rays drop onto the tops of low walls. Lighting goes through 32 DOOM-style colormaps per fog colour, plus a baked lightmap from fireplaces and street lamps.
 - **Textures** are generated at load time, not loaded from files (`game/js/textures.js`).
 - **Most villagers, beasts, props, item icons and portraits** are sculpted from signed-distance primitives and ray-marched, like the bestiary's creatures.
-- **Some assets are baked from 3D models** generated with [Tripo](https://www.tripo3d.ai/): ten villagers: Elsa, Tobin, Pip, Bram, Marta, Cedric, Hilda, Wren, Brother Alden and Rolf (rigged and animated; villagers who never leave their counter use their idle loop for talking) and the first-person arms, some modelled already holding their weapon. `tools/bake-mesh.js` and `tools/bake-viewmodel.js` render them with three.js in headless Chrome, using the game's camera tilt and light direction, 4× supersampled. They are then snapped to the palette with dithering and dark outlines, and stored compressed in `game/js/data/baked/`. The source models live in `assets/tripo/`, and the game itself never loads them.
+- **Some assets are baked from 3D models** generated with [Tripo](https://www.tripo3d.ai/). These cover every villager and animal, rigged and animated (villagers who never leave their counter use their idle loop for talking). They also cover the first-person arms, each modelled already holding its weapon. `tools/bake-mesh.js` and `tools/bake-viewmodel.js` render them with three.js in headless Chrome, using the game's camera tilt and light direction, 4× supersampled. They are then snapped to the palette with dithering and dark outlines, and stored compressed in `game/js/data/baked/`. The source models live in `assets/tripo/`, and the game itself never loads them.
 - **Villagers** use a shared body builder (`game/js/actors/people.js`). It covers proportions by sex, age and build, and faces with cheekbones, lids, lashes, brows, noses, lips and stubble. It also covers hairstyles and beards, and outfits from aprons to an open-shirted smith.
 - **Actor sprites render on demand.** Each one is ray-marched a few rows per frame within a small time budget, while the nearest finished pose stands in. The poses you see when entering a map are rendered behind the door fade.
 
@@ -102,13 +102,18 @@ node tools/tripo.js balance                                  # credits left
 node tools/tripo.js text elsa "<description>"                # model -> assets/tripo/elsa/model-N.glb
 node tools/tripo.js rig elsa                                 # rig the latest model
 node tools/tripo.js animate elsa idle walk agree             # preset animations
-node tools/bake-mesh.js elsa --res 2.5                       # -> game/js/data/baked/elsa.js
+node tools/bake-mesh.js tobin                                # -> game/js/data/baked/tobin.js
 node tools/bake-viewmodel.js [--preview]                     # -> game/js/data/baked/viewmodel.js
+node tools/viewer.js                                         # the motion viewer, in the browser
 ```
+
+Each villager's and animal's height, held pole and actions are in `tools/bake/bakes.mjs`; the first-person arm, its attacks and its models are in `tools/bake/arm.mjs`.
+
+The **motion viewer** (`tools/viewer.js`, or `npm run viewer` in `tools/`) shows every baked model moving. It lists the first-person arm with each weapon, and every villager and animal. Each one is posed live in 3D by the same code the bakers use, beside the frame the game shows at that moment. The arm is shown through the game's camera and from outside, with guides for the head, shoulder, forearm, palm and weapon. Villagers' scripted moves show where each wrist is sent, and Tobin's anvil stands where it is in town. There are controls to play at game speed or slower, scrub, and step frame by frame. Edits to `tools/bake/*.mjs` show up when the page is reloaded.
 
 Every Tripo task and its credit cost is logged in `assets/tripo/<name>/tasks.json`.
 
-First-person models that already hold their weapon (`assets/tripo/fp-*`) are posed from three points read off their reference views: the elbow end, the centre of the fist and the weapon's tip. These are set in `tools/bake-viewmodel.js`.
+First-person models that already hold their weapon (`assets/tripo/fp-*`) are posed from three points read off their reference views: the elbow end, the centre of the fist and the weapon's tip. These are set in `tools/bake/arm.mjs`.
 
 ```sh
 node tools/model-views.js assets/tripo/fp-club/model-1.glb  # front, side and top views with a grid

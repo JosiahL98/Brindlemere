@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Motion Viewer</title>
+<link rel="icon" href="data:,">
+<script type="importmap">
+{ "imports": {
+  "three": "/tools/node_modules/three/build/three.module.js",
+  "three/addons/": "/tools/node_modules/three/examples/jsm/"
+} }
+</script>
+<style>
+  :root { --bg: #1d1a22; --panel: #26222d; --line: #3a3443; --text: #e8e2d6; --dim: #9a9188; --gold: #d8b25a; --hi: #3d3550; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.4 system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; }
+  header { display: flex; align-items: baseline; gap: 16px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 15px; margin: 0; color: var(--gold); font-weight: 600; }
+  header p { margin: 0; color: var(--dim); }
+  #status { margin-left: auto; color: var(--dim); }
+  #app { flex: 1; display: flex; min-height: 0; }
+  nav { width: 210px; flex: none; overflow-y: auto; border-right: 1px solid var(--line); padding: 6px 0; }
+  nav h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); margin: 12px 14px 4px; font-weight: 600; }
+  nav button { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text); padding: 5px 14px; font: inherit; cursor: pointer; }
+  nav button small { color: var(--dim); margin-left: 4px; }
+  nav button:hover { background: var(--panel); }
+  nav button.on { background: var(--hi); color: #fff; }
+  main { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 10px 12px; gap: 8px; }
+  #bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+  #bar label { display: inline-flex; gap: 5px; align-items: center; color: var(--dim); }
+  select, button.b { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 3px 8px; font: inherit; }
+  button.b { cursor: pointer; }
+  button.b:hover { border-color: var(--gold); }
+  button.b.on { background: var(--hi); border-color: var(--gold); }
+  #views { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; gap: 8px; min-height: 0; }
+  #views.villager { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr; }
+  #views.villager #v-eye { display: none; }
+  .view { position: relative; background: #000; border: 1px solid var(--line); border-radius: 4px; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .view h3 { margin: 0; padding: 4px 8px; font-size: 12px; font-weight: 600; color: var(--dim); background: var(--panel); border-bottom: 1px solid var(--line); }
+  .view .canvas-wrap { flex: 1; position: relative; min-height: 0; }
+  .view canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  canvas.pixel { image-rendering: pixelated; }
+  #v-eye { justify-content: center; }
+  #v-eye h3 { position: absolute; top: 0; left: 0; right: 0; z-index: 1; }
+  #v-eye .canvas-wrap { aspect-ratio: 1.6; flex: none; width: 100%; max-height: 100%; }
+  #v-game { grid-column: 1 / -1; }
+  #views.villager #v-game { grid-column: auto; }
+  #v-game .canvas-wrap { display: flex; align-items: center; justify-content: center; }
+  #v-game canvas { position: static; width: auto; height: 100%; max-width: 100%; image-rendering: pixelated; }
+  #views:not(.villager) #v-game .canvas-wrap { height: 220px; flex: none; }
+  #rots { position: absolute; top: 30px; right: 6px; display: flex; flex-direction: column; gap: 3px; }
+  #rots button { font-size: 11px; padding: 2px 6px; }
+  #timeline { display: grid; grid-template-columns: auto 1fr auto; gap: 6px 10px; align-items: center; }
+  #transport { display: flex; gap: 4px; }
+  #scrub { position: relative; height: 34px; }
+  #scrub input { width: 100%; margin: 0; position: absolute; top: 0; }
+  #ticks { position: absolute; left: 0; top: 18px; width: 100%; height: 16px; }
+  #phase { font-variant-numeric: tabular-nums; color: var(--gold); min-width: 210px; text-align: right; }
+  #readout { margin: 0; padding: 6px 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 4px; color: var(--dim); font: 12px/1.45 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 140px; overflow-y: auto; }
+  #readout b { color: var(--text); font-weight: 600; }
+  .key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Motion Viewer</h1>
+  <p>Each model moving live in 3D, posed by the same code the bakers use, beside the frames the game shows.</p>
+  <span id="status">Loading…</span>
+</header>
+<div id="app">
+  <nav id="list"></nav>
+  <main>
+    <div id="bar">
+      <label id="action-wrap">Action <select id="action"></select></label>
+      <label><input type="checkbox" id="snap"> Baked frames only</label>
+      <label class="arm-only"><input type="checkbox" id="pixel"> Game resolution</label>
+      <label><input type="checkbox" id="guides" checked> Guides</label>
+      <label><input type="checkbox" id="setting" checked> Ground and target</label>
+      <label class="vill-only"><input type="checkbox" id="skeleton"> Skeleton</label>
+      <span id="legend"></span>
+    </div>
+    <div id="views">
+      <section class="view" id="v-eye"><h3>Through your eyes (the game's camera)</h3><div class="canvas-wrap"><canvas id="eye"></canvas></div></section>
+      <section class="view" id="v-out"><h3 id="out-title">From outside: drag to turn, right-drag to pan, scroll to zoom</h3><div class="canvas-wrap"><canvas id="out"></canvas></div></section>
+      <section class="view" id="v-game"><h3 id="game-title">In the game: the baked frame</h3><div class="canvas-wrap"><canvas id="game"></canvas><div id="rots"></div></div></section>
+    </div>
+    <div id="timeline">
+      <div id="transport">
+        <button class="b" id="prev" title="Previous baked frame (,)">◀◀</button>
+        <button class="b" id="play" title="Play / pause (Space)">Pause</button>
+        <button class="b" id="next" title="Next baked frame (.)">▶▶</button>
+        <select id="speed" title="Playback speed"><option value="0.1">0.1×</option><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1× (game speed)</option></select>
+      </div>
+      <div id="scrub"><input type="range" id="t" min="0" max="1000" value="0"><canvas id="ticks"></canvas></div>
+      <div id="phase"></div>
+    </div>
+    <pre id="readout"></pre>
+  </main>
+</div>
+<script src="/js/math.js"></script>
+<script src="/js/palette.js"></script>
+<script src="/game/js/data/items.js"></script>
+<script src="/game/js/data/baked.js"></script>
+<script src="/game/js/data/baked/viewmodel.js"></script>
+<script type="module" src="/tools/viewer/viewer.mjs"></script>
+</body>
+</html>

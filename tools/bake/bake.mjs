@@ -236,7 +236,13 @@ function applyScript(M, S, u, h) {
   const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * e);
   const lean = ((k0.lean || 0) + ((k1.lean || 0) - (k0.lean || 0)) * e) * Math.PI / 180;
   if (lean) turnBone(boneNamed(M, 'Spine01'), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), lean));
-  for (const side of ['R', 'L']) if (k0[side]) ikArm(M, side, new THREE.Vector3(...mix(k0[side], k1[side])).multiplyScalar(h), new THREE.Vector3(...mix(k0[side + 'p'], k1[side + 'p'])));
+  const targets = {};
+  for (const side of ['R', 'L']) {
+    if (!k0[side]) continue;
+    targets[side] = new THREE.Vector3(...mix(k0[side], k1[side])).multiplyScalar(h);
+    ikArm(M, side, targets[side], new THREE.Vector3(...mix(k0[side + 'p'], k1[side + 'p'])));
+  }
+  return targets; // where the wrists were sent (world space)
 }
 // A pole held in the hands: a shaft with an iron spearhead or a pitchfork's tines.
 function makePole(kind, h) {
@@ -273,26 +279,28 @@ function placePole(M, P, h, twoHands) {
 // dead (a crab onto its back) with blood spreading beneath. The lowest point stays on the ground.
 function bindPose(M) { M.model.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.pose(); }); M.holder.updateMatrixWorld(true); }
 const easeIn = (t) => t * t;
-function beastPose(M, kind, f, n, h, base, cfg) {
+// Values from a table spread evenly over the move, read at phase u (0..1).
+const table = (vals, u) => { const x = Math.min(1, Math.max(0, u)) * (vals.length - 1), i = Math.min(vals.length - 2, Math.floor(x)); return vals[i] + (vals[i + 1] - vals[i]) * (x - i); };
+function beastPose(M, kind, u, h, base, cfg) {
   M.holder.position.copy(base.p); M.holder.quaternion.copy(base.q);
   bindPose(M);
   const head = M.model.getObjectByName('tripoHead_0'), X = new THREE.Vector3(1, 0, 0);
   const tilt = (a) => M.holder.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(X, a));
   let headDip = 0, blood = 0;
   if (kind === 'rest') {
-    const b = Math.sin(f / n * Math.PI * 2);
+    const b = Math.sin(u * Math.PI * 2);
     M.holder.position.y += 0.012 * h * b; headDip = 0.05 * b;
   } else if (kind === 'lunge') {
-    const k = [0, 0.35, 1, 1, 0.5, 0][Math.round(f / (n - 1) * 5)], crouch = f === 1 ? 1 : 0;
+    const k = table([0, 0.35, 1, 1, 0.5, 0], u), crouch = table([0, 1, 0, 0, 0, 0], u);
     M.holder.position.z += 0.32 * h * k - 0.1 * h * crouch;
     tilt(0.12 * k - 0.06 * crouch); headDip = 0.3 * k;
   } else if (kind === 'flinch') {
-    const k = [1, 0.55, 0][Math.round(f / (n - 1) * 2)];
+    const k = table([1, 0.55, 0], u);
     M.holder.position.z -= 0.16 * h * k; tilt(-0.2 * k); headDip = -0.3 * k;
   } else if (kind === 'die') {
-    const t = f / (n - 1), e = easeIn(Math.min(1, t / 0.6));
+    const e = easeIn(Math.min(1, u / 0.6));
     M.holder.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), (cfg.flip ? Math.PI : 1.45) * e));
-    blood = Math.max(0, (t - 0.55) / 0.45);
+    blood = Math.max(0, (u - 0.55) / 0.45);
   }
   M.holder.updateMatrixWorld(true);
   if (head && headDip) turnBone(head, new THREE.Quaternion().setFromAxisAngle(X, headDip));
@@ -307,26 +315,50 @@ function beastPose(M, kind, f, n, h, base, cfg) {
   if (blood > 0) { const c = worldBox(M).getCenter(new THREE.Vector3()); M.pool.position.set(c.x, 0.05, c.z); M.pool.scale.set(0.5 * h * blood, 0.35 * h * blood, 1); M.pool.updateMatrixWorld(true); }
 }
 
+// One of a villager's (or an animal's) actions, ready to pose: the model for it, scaled to the
+// villager's height (scale.value, shared across actions, comes from the first one loaded) and
+// stood at the origin, any pole they hold, and how long the move takes.
+async function loadVillager(cfg, A, scale) {
+  const script = A.clip.startsWith('@') ? SCRIPTS[A.clip.slice(1)] : null, beast = A.clip.startsWith('!') ? A.clip.slice(1) : null;
+  const M = await loadModel(`/assets/tripo/${cfg.name}/anim-${script ? 'idle' : beast ? 'walk' : A.clip}.glb`);
+  const pole = cfg.prop ? makePole(cfg.prop, cfg.height) : null;
+  if (pole) M.extras = [pole.g];
+  const rest = () => { poseAt(M, 0); if (beast) bindPose(M); };
+  rest();
+  if (scale.value == null) { const b = worldBox(M); scale.value = cfg.height / (b.max.y - b.min.y); }
+  M.holder.scale.setScalar(scale.value);
+  rest();
+  const b0 = worldBox(M), c = b0.getCenter(new THREE.Vector3());
+  M.holder.position.set(-c.x, -b0.min.y, -c.z);
+  const base = { p: M.holder.position.clone(), q: M.holder.quaternion.clone() };
+  // The pose scripted moves start from. (Re-posing the clip at the same time won't do: the mixer
+  // only writes a bone whose value has changed, so a script's turns would pile up frame on frame.)
+  M.holder.updateMatrixWorld(true);
+  const rest0 = bones(M.model).map((b) => [b, b.position.clone(), b.quaternion.clone(), b.scale.clone()]);
+  M.rest = () => { for (const [b, p, q, sc] of rest0) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(sc); } M.holder.updateMatrixWorld(true); };
+  // A strike uses the first swing of a preset that may repeat it several times.
+  const period = script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
+  return { M, pole, base, period, script, beast, A, cfg };
+}
+// Poses it at phase u (0..1 through the move); returns the IK targets of a scripted move.
+function poseVillager(V, u) {
+  const { M, pole, base, period, script, beast, A, cfg } = V;
+  let targets = null;
+  if (script) { M.rest(); targets = applyScript(M, script, u, cfg.height); }
+  else if (beast) beastPose(M, beast, u, cfg.height, base, cfg);
+  else poseAt(M, A.once ? u * period * 0.92 : u * period);
+  if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
+  return targets;
+}
+// The phase of each baked frame of an action.
+const framePhase = (A, f) => (A.once ? f / (A.frames - 1) : f / A.frames);
+
 window.bake = async (cfg) => {
-  const dir = `/assets/tripo/${cfg.name}/`;
   const pitch = cfg.pitchDeg * Math.PI / 180;
   const out = { actions: {}, sprites: [], height: cfg.height };
-  let scale = null;
+  const scale = { value: null };
   for (const A of cfg.actions) {
-    const script = A.clip.startsWith('@') ? SCRIPTS[A.clip.slice(1)] : null, beast = A.clip.startsWith('!') ? A.clip.slice(1) : null;
-    const M = await loadModel(`${dir}anim-${script ? 'idle' : beast ? 'walk' : A.clip}.glb`);
-    const pole = cfg.prop ? makePole(cfg.prop, cfg.height) : null;
-    if (pole) M.extras = [pole.g];
-    const rest = () => { poseAt(M, 0); if (beast) bindPose(M); };
-    rest();
-    if (scale === null) { const b = worldBox(M); scale = cfg.height / (b.max.y - b.min.y); }
-    M.holder.scale.setScalar(scale);
-    rest();
-    const b0 = worldBox(M), c = b0.getCenter(new THREE.Vector3());
-    M.holder.position.set(-c.x, -b0.min.y, -c.z);
-    const base = { p: M.holder.position.clone(), q: M.holder.quaternion.clone() };
-    // A strike uses the first swing of a preset that may repeat it several times.
-    const period = script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
+    const V = await loadVillager(cfg, A, scale), { M, period, script, beast } = V;
     // A strike plays once, quicker than the preset, with its blow landing a little past halfway.
     const meta = A.once
       ? { frames: A.frames, fps: +(A.frames / Math.min(period, 0.8)).toFixed(3), loop: false, hit: Math.floor(A.frames * 0.55), clip: A.clip, period: +period.toFixed(3) }
@@ -342,12 +374,7 @@ window.bake = async (cfg) => {
     const R = cfg.height * (cfg.wide || 0.45); // animals are long: a wider frame
     const frame = { left: -R, right: R, bottom: -cfg.height * 0.15, top: cfg.height * 1.12 };
     for (let f = 0; f < A.frames; f++) {
-      if (script) {
-        poseAt(M, 0);
-        applyScript(M, script, A.once ? f / (A.frames - 1) : f / A.frames, cfg.height);
-      } else if (beast) beastPose(M, beast, f, A.frames, cfg.height, base, cfg);
-      else poseAt(M, A.once ? (f / (A.frames - 1)) * period * 0.92 : (f / A.frames) * period);
-      if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
+      poseVillager(V, framePhase(A, f));
       for (let rot = 0; rot < 8; rot++) {
         const s = shoot(M, rot * Math.PI / 4, pitch, cfg.res, cfg.ss, frame, cfg.light);
         out.sprites.push(Object.assign({ action: A.id, frame: f, rot }, s));
@@ -578,45 +605,53 @@ function quantiseScreen(px, W, H, ss, light, rawOut, mask) {
   return { w: cw, h: ch, x0, y0, data: out };
 }
 
+// An arm-and-weapon model ready to pose: a forearm copy and a hand copy (split at the wrist by
+// placeFused), scaled from the fist's width, with linen sleeve pieces for the forearm, elbow,
+// upper arm and wrist. F (from tools/bake/arm.mjs) is copied, mirrored if the model needs it.
+async function loadFused(F, cfg) {
+  F = JSON.parse(JSON.stringify(F));
+  const M = await loadStatic(F.url);
+  M.hand = await loadStatic(F.url);
+  if (F.mirror) {
+    // Generated as a left hand: flip it into a right one (points and all) before posing.
+    M.model.scale.x *= -1; M.hand.model.scale.x *= -1;
+    for (const p of M.pts) p.x = -p.x;
+    for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
+  }
+  const h = V3(F.hand), fore = h.clone().sub(V3(F.elbow)).normalize();
+  // Width of the fist across the forearm, from the points around its centre.
+  const u = new THREE.Vector3(1, 0, 0).projectOnPlane(fore).normalize(), v = fore.clone().cross(u);
+  const near = M.pts.filter((p) => p.distanceTo(h) < 0.15).map((p) => p.clone().sub(h));
+  const range = (a) => Math.max(...near.map((p) => p.dot(a))) - Math.min(...near.map((p) => p.dot(a)));
+  F.k = cfg.fistWidth / Math.max(range(u), range(v));
+  // The models stop a little below the elbow; carry the sleeve on past the cut (where the
+  // clip plane trims them) so a reaching arm never ends in mid-air.
+  const c = h.clone().add(V3(F.elbow).sub(h).multiplyScalar(0.8));
+  const ring = M.pts.filter((p) => Math.abs(p.clone().sub(c).dot(fore)) < 0.03);
+  // A typical radius (the frayed cuff makes the widest points misleading).
+  const ds = ring.map((p) => p.clone().sub(c).projectOnPlane(fore).length()).sort((a, b) => a - b);
+  M.sleeveR = ds[Math.floor(ds.length * 0.6)] || 0.1;
+  // Coarse woven linen: a little noise and some lengthwise folds.
+  const px = new Uint8Array(64 * 64 * 4);
+  for (let i = 0; i < 64 * 64; i++) {
+    const x = i % 64, y = i >> 6, shade = Math.sin(x / 64 * Math.PI * 6 + Math.sin(y * 0.15) * 1.5) * 12 + (Math.random() - 0.5) * 14;
+    px.set([176 + shade, 168 + shade, 148 + shade, 255], i * 4);
+  }
+  const tex = new THREE.DataTexture(px, 64, 64);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 3); tex.needsUpdate = true;
+  const linen = new THREE.MeshLambertMaterial({ map: tex, side: THREE.DoubleSide });
+  // Forearm and upper arm (unit tubes, sized each frame), balls at the elbow and the wrist.
+  M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen)];
+  for (const m of M.sleeves) m.castShadow = m.receiveShadow = true;
+  M.F = F;
+  return M;
+}
+
 window.bakeViewmodel = async (cfg) => {
   const out = { fused: {}, previews: [] };
-  for (const [id, F] of Object.entries(cfg.fused || {})) {
-    const M = await loadStatic(F.url);
-    M.hand = await loadStatic(F.url);
-    if (F.mirror) {
-      // Generated as a left hand: flip it into a right one (points and all) before posing.
-      M.model.scale.x *= -1; M.hand.model.scale.x *= -1;
-      for (const p of M.pts) p.x = -p.x;
-      for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
-    }
-    const h = V3(F.hand), fore = h.clone().sub(V3(F.elbow)).normalize();
-    {
-      // Width of the fist across the forearm, from the points around its centre.
-      const u = new THREE.Vector3(1, 0, 0).projectOnPlane(fore).normalize(), v = fore.clone().cross(u);
-      const near = M.pts.filter((p) => p.distanceTo(h) < 0.15).map((p) => p.clone().sub(h));
-      const range = (a) => Math.max(...near.map((p) => p.dot(a))) - Math.min(...near.map((p) => p.dot(a)));
-      F.k = cfg.fistWidth / Math.max(range(u), range(v));
-      // The models stop a little below the elbow; carry the sleeve on past the cut (where the
-      // clip plane trims them) so a reaching arm never ends in mid-air.
-      const c = h.clone().add(V3(F.elbow).sub(h).multiplyScalar(0.8));
-      const ring = M.pts.filter((p) => Math.abs(p.clone().sub(c).dot(fore)) < 0.03);
-      // A typical radius (the frayed cuff makes the widest points misleading).
-      const ds = ring.map((p) => p.clone().sub(c).projectOnPlane(fore).length()).sort((a, b) => a - b);
-      const radius = ds[Math.floor(ds.length * 0.6)] || 0.1;
-      M.sleeveR = radius;
-      // Coarse woven linen: a little noise and some lengthwise folds.
-      const px = new Uint8Array(64 * 64 * 4);
-      for (let i = 0; i < 64 * 64; i++) {
-        const x = i % 64, y = i >> 6, shade = Math.sin(x / 64 * Math.PI * 6 + Math.sin(y * 0.15) * 1.5) * 12 + (Math.random() - 0.5) * 14;
-        px.set([176 + shade, 168 + shade, 148 + shade, 255], i * 4);
-      }
-      const tex = new THREE.DataTexture(px, 64, 64);
-      tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 3); tex.needsUpdate = true;
-      const linen = new THREE.MeshLambertMaterial({ map: tex });
-      // Forearm and upper arm (unit tubes, sized each frame) and a ball at the elbow.
-      M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen)];
-      for (const m of M.sleeves) { m.material.side = THREE.DoubleSide; m.castShadow = m.receiveShadow = true; }
-    }
+  for (const [id, F0] of Object.entries(cfg.fused || {})) {
+    const M = await loadFused(F0, cfg), F = M.F;
+    const fore = V3(F.hand).sub(V3(F.elbow)).normalize();
     if (cfg.calibrate) {
       // Four ways round the forearm for the palm, each at the ready pose: pick the one where the
       // palm faces left, and put it in the config.
@@ -727,3 +762,6 @@ window.orthoViews = async (url, px) => {
   }
   return { min: box.min.toArray(), max: box.max.toArray(), views };
 };
+
+// For the motion viewer (tools/viewer/), which poses the same models the same way.
+export { THREE, LIGHT_VIEW, loadModel, poseAt, bindPose, worldBox, bones, SCRIPTS, applyScript, loadVillager, poseVillager, framePhase, loadFused, placeFused };

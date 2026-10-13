@@ -9,15 +9,16 @@ const zlib = require('zlib');
 const root = path.join(__dirname, '..', '..');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.glb': 'model/gltf-binary', '.json': 'application/json' };
 
-function serve() {
+// port 0 picks any free one. Nothing is cached, so edited tools show up on reload.
+function serve(port = 0) {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       const file = path.join(root, decodeURIComponent(req.url.split('?')[0]));
       if (!file.startsWith(root) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) { res.writeHead(404); res.end(); return; }
-      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' });
+      res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
       fs.createReadStream(file).pipe(res);
     });
-    server.listen(0, '127.0.0.1', () => resolve(server));
+    server.listen(port, '127.0.0.1', () => resolve(server));
   });
 }
 
