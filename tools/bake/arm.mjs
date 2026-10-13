@@ -164,8 +164,8 @@ const T = (id, n = 1) => `/assets/tripo/${id}/model-${n}.glb`;
 export const FUSED = {
   empty: { url: T('fp-empty'), move: 'punch', items: ['Bare fists'], elbow: [0.005, -0.317, 0.031], hand: [0, 0.37, -0.03], palm: [1, 0, 0] },
   club: { url: T('fp-club', 2), move: 'swing', items: ['Wooden Club'], mirror: true, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], tip: [0.004, 0.5, 0.043], palm: [0, -0.211, -0.977] },
-  hammer: { url: T('fp-hammer'), move: 'swing', items: ["Apprentice's Hammer"], mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25], palm: [0, -0.691, -0.723] },
-  knife: { url: T('fp-knife'), move: 'swing', items: ['Fishing Knife'], elbow: [0.09, -0.458, -0.126], hand: [-0.009, -0.044, 0.083], tip: [-0.223, 0.489, 0.286], palm: [0, -0.451, 0.893] },
+  hammer: { url: T('fp-hammer'), move: 'swing', items: ["Apprentice's Hammer"], mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25], palm: [-0.973, -0.166, 0.159] },
+  knife: { url: T('fp-knife'), move: 'swing', items: ['Fishing Knife'], elbow: [0.09, -0.458, -0.126], hand: [-0.009, -0.044, 0.083], tip: [-0.223, 0.489, 0.286], palm: [0.978, 0.186, 0.094] },
   dagger: { url: T('fp-dagger'), move: 'swing', items: ['Iron Dagger'], elbow: [0.026, -0.475, -0.018], hand: [-0.003, 0.058, 0.053], tip: [-0.005, 0.492, 0.052], palm: [0, -0.132, 0.991] },
   rusty_dagger: { url: T('fp-rusty-dagger'), move: 'swing', items: ['Rusty Dagger'], elbow: [0.129, -0.435, -0.009], hand: [0.0, -0.12, 0.003], tip: [-0.237, 0.5, 0.011], palm: [0, -0.038, 0.999] },
   longsword: { url: T('fp-longsword'), move: 'swing', items: ['Steel Longsword'], elbow: [0.021, -0.435, 0.45], hand: [0.021, -0.173, -0.197], tip: [-0.105, 0.478, -0.299], palm: [-1, 0, 0] },
