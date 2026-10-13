@@ -182,28 +182,29 @@ function shoot(M, yaw, pitch, res, ss, frame, cfg) {
 // rigging bends them along the legs.
 const SCRIPTS = {
   // A blacksmith's blow with one arm: up past the shoulder, down onto the anvil, a small bounce.
+  // (A villager's wrist reaches about 0.26 of their height from the shoulder.)
   hammer: { period: 1.1, keys: [
-    { at: 0, R: [-0.22, 0.88, 0.04], Rp: [-1, -0.2, -0.6] },
-    { at: 0.3, R: [-0.2, 0.8, 0.16], Rp: [-1, -0.3, -0.5] },
-    { at: 0.45, R: [-0.13, 0.55, 0.3], Rp: [-1, -0.4, -0.3], lean: 8 },
-    { at: 0.6, R: [-0.14, 0.6, 0.29], Rp: [-1, -0.4, -0.3], lean: 7 },
-    { at: 0.8, R: [-0.19, 0.76, 0.17], Rp: [-1, -0.3, -0.5], lean: 3 },
-    { at: 1, R: [-0.22, 0.88, 0.04], Rp: [-1, -0.2, -0.6] },
+    { at: 0, R: [-0.2, 0.9, 0.02], Rp: [-1, -0.2, -0.6] },
+    { at: 0.3, R: [-0.17, 0.84, 0.12], Rp: [-1, -0.3, -0.5], lean: 2 },
+    { at: 0.45, R: [-0.1, 0.57, 0.22], Rp: [-1, -0.4, -0.3], lean: 10 },
+    { at: 0.6, R: [-0.1, 0.6, 0.21], Rp: [-1, -0.4, -0.3], lean: 9 },
+    { at: 0.8, R: [-0.15, 0.76, 0.14], Rp: [-1, -0.3, -0.5], lean: 4 },
+    { at: 1, R: [-0.2, 0.9, 0.02], Rp: [-1, -0.2, -0.6] },
   ] },
-  // Both hands on the shaft: draw back, drive it straight ahead, recover.
+  // Both hands on the shaft, the left ahead of the right: draw back, drive it straight ahead.
   thrust: { period: 0.75, keys: [
-    { at: 0, R: [-0.13, 0.5, 0.02], Rp: [-1, -0.6, -0.4], L: [0.03, 0.56, 0.24], Lp: [0.6, -0.8, 0] },
-    { at: 0.25, R: [-0.15, 0.52, -0.1], Rp: [-1, -0.6, -0.5], L: [-0.01, 0.57, 0.13], Lp: [0.6, -0.8, 0], lean: -3 },
-    { at: 0.5, R: [-0.07, 0.57, 0.26], Rp: [-1, -0.5, -0.2], L: [0.02, 0.6, 0.48], Lp: [0.5, -0.8, 0], lean: 12 },
-    { at: 0.65, R: [-0.08, 0.56, 0.22], Rp: [-1, -0.5, -0.2], L: [0.02, 0.59, 0.44], Lp: [0.5, -0.8, 0], lean: 10 },
-    { at: 1, R: [-0.13, 0.5, 0.02], Rp: [-1, -0.6, -0.4], L: [0.03, 0.56, 0.24], Lp: [0.6, -0.8, 0] },
+    { at: 0, R: [-0.06, 0.55, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.01, 0.6, 0.17], Lp: [0.7, -0.7, 0] },
+    { at: 0.25, R: [-0.07, 0.55, -0.09], Rp: [-1, -0.6, -0.5], L: [-0.02, 0.59, 0.11], Lp: [0.7, -0.7, 0], lean: -4 },
+    { at: 0.5, R: [-0.04, 0.6, 0.12], Rp: [-1, -0.5, -0.2], L: [0, 0.62, 0.24], Lp: [0.6, -0.8, 0], lean: 14 },
+    { at: 0.65, R: [-0.04, 0.6, 0.1], Rp: [-1, -0.5, -0.2], L: [0, 0.62, 0.22], Lp: [0.6, -0.8, 0], lean: 12 },
+    { at: 1, R: [-0.06, 0.55, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.01, 0.6, 0.17], Lp: [0.7, -0.7, 0] },
   ] },
   // Forking hay: tines down to the ground ahead, then lifted and tossed.
   fork: { period: 1.6, keys: [
-    { at: 0, R: [-0.12, 0.52, 0.04], Rp: [-1, -0.6, -0.4], L: [0.02, 0.5, 0.26], Lp: [0.6, -0.8, 0], lean: 15 },
-    { at: 0.35, R: [-0.12, 0.46, 0.0], Rp: [-1, -0.6, -0.4], L: [0.03, 0.42, 0.24], Lp: [0.6, -0.8, 0], lean: 22 },
-    { at: 0.65, R: [-0.14, 0.6, 0.02], Rp: [-1, -0.5, -0.4], L: [0.02, 0.7, 0.22], Lp: [0.6, -0.8, 0], lean: 2 },
-    { at: 1, R: [-0.12, 0.52, 0.04], Rp: [-1, -0.6, -0.4], L: [0.02, 0.5, 0.26], Lp: [0.6, -0.8, 0], lean: 15 },
+    { at: 0, R: [-0.06, 0.62, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.52, 0.14], Lp: [0.7, -0.7, 0], lean: 14 },
+    { at: 0.35, R: [-0.06, 0.6, -0.02], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.46, 0.15], Lp: [0.7, -0.7, 0], lean: 22 },
+    { at: 0.65, R: [-0.07, 0.52, 0.0], Rp: [-1, -0.5, -0.4], L: [-0.02, 0.68, 0.12], Lp: [0.7, -0.7, 0], lean: 2 },
+    { at: 1, R: [-0.06, 0.62, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.52, 0.14], Lp: [0.7, -0.7, 0], lean: 14 },
   ] },
 };
 const boneNamed = (M, n) => M.model.getObjectByName(n);
@@ -266,43 +267,86 @@ function placePole(M, P, h, twoHands) {
   P.g.updateMatrixWorld(true);
 }
 
+// ---- Animals ----------------------------------------------------------------------------------
+// Tripo only animates a creature's walk. Its other moves are posed here over the rig's standing
+// pose, moving the whole body: breathing at rest, a crouch and lunge, a flinch, and rolling over
+// dead (a crab onto its back) with blood spreading beneath. The lowest point stays on the ground.
+function bindPose(M) { M.model.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.pose(); }); M.holder.updateMatrixWorld(true); }
+const easeIn = (t) => t * t;
+function beastPose(M, kind, f, n, h, base, cfg) {
+  M.holder.position.copy(base.p); M.holder.quaternion.copy(base.q);
+  bindPose(M);
+  const head = M.model.getObjectByName('tripoHead_0'), X = new THREE.Vector3(1, 0, 0);
+  const tilt = (a) => M.holder.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(X, a));
+  let headDip = 0, blood = 0;
+  if (kind === 'rest') {
+    const b = Math.sin(f / n * Math.PI * 2);
+    M.holder.position.y += 0.012 * h * b; headDip = 0.05 * b;
+  } else if (kind === 'lunge') {
+    const k = [0, 0.35, 1, 1, 0.5, 0][Math.round(f / (n - 1) * 5)], crouch = f === 1 ? 1 : 0;
+    M.holder.position.z += 0.32 * h * k - 0.1 * h * crouch;
+    tilt(0.12 * k - 0.06 * crouch); headDip = 0.3 * k;
+  } else if (kind === 'flinch') {
+    const k = [1, 0.55, 0][Math.round(f / (n - 1) * 2)];
+    M.holder.position.z -= 0.16 * h * k; tilt(-0.2 * k); headDip = -0.3 * k;
+  } else if (kind === 'die') {
+    const t = f / (n - 1), e = easeIn(Math.min(1, t / 0.6));
+    M.holder.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), (cfg.flip ? Math.PI : 1.45) * e));
+    blood = Math.max(0, (t - 0.55) / 0.45);
+  }
+  M.holder.updateMatrixWorld(true);
+  if (head && headDip) turnBone(head, new THREE.Quaternion().setFromAxisAngle(X, headDip));
+  // Back down onto the ground.
+  M.holder.position.y -= worldBox(M).min.y;
+  M.holder.updateMatrixWorld(true);
+  if (!M.pool) {
+    M.pool = new THREE.Mesh(new THREE.CircleGeometry(1, 24), new THREE.MeshLambertMaterial({ color: 0x5a0d0d }));
+    M.pool.rotation.x = -Math.PI / 2; M.pool.receiveShadow = true;
+  }
+  M.extras = blood > 0 ? [M.pool] : [];
+  if (blood > 0) { const c = worldBox(M).getCenter(new THREE.Vector3()); M.pool.position.set(c.x, 0.05, c.z); M.pool.scale.set(0.5 * h * blood, 0.35 * h * blood, 1); M.pool.updateMatrixWorld(true); }
+}
+
 window.bake = async (cfg) => {
   const dir = `/assets/tripo/${cfg.name}/`;
   const pitch = cfg.pitchDeg * Math.PI / 180;
   const out = { actions: {}, sprites: [], height: cfg.height };
   let scale = null;
   for (const A of cfg.actions) {
-    const script = A.clip.startsWith('@') ? SCRIPTS[A.clip.slice(1)] : null;
-    const M = await loadModel(`${dir}anim-${script ? 'idle' : A.clip}.glb`);
+    const script = A.clip.startsWith('@') ? SCRIPTS[A.clip.slice(1)] : null, beast = A.clip.startsWith('!') ? A.clip.slice(1) : null;
+    const M = await loadModel(`${dir}anim-${script ? 'idle' : beast ? 'walk' : A.clip}.glb`);
     const pole = cfg.prop ? makePole(cfg.prop, cfg.height) : null;
     if (pole) M.extras = [pole.g];
-    poseAt(M, 0);
+    const rest = () => { poseAt(M, 0); if (beast) bindPose(M); };
+    rest();
     if (scale === null) { const b = worldBox(M); scale = cfg.height / (b.max.y - b.min.y); }
     M.holder.scale.setScalar(scale);
-    poseAt(M, 0);
+    rest();
     const b0 = worldBox(M), c = b0.getCenter(new THREE.Vector3());
     M.holder.position.set(-c.x, -b0.min.y, -c.z);
+    const base = { p: M.holder.position.clone(), q: M.holder.quaternion.clone() };
     // A strike uses the first swing of a preset that may repeat it several times.
-    const period = script ? script.period : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
+    const period = script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
     // A strike plays once, quicker than the preset, with its blow landing a little past halfway.
     const meta = A.once
       ? { frames: A.frames, fps: +(A.frames / Math.min(period, 0.8)).toFixed(3), loop: false, hit: Math.floor(A.frames * 0.55), clip: A.clip, period: +period.toFixed(3) }
       : { frames: A.frames, fps: +(A.frames / period * A.speed).toFixed(3), loop: true, clip: A.clip, period: +period.toFixed(3) };
-    if (A.cycle && !script) {
+    if (A.cycle && !script && !beast) {
       // Distance covered per loop: each foot sweeps back one step length while planted.
-      const foot = M.model.getObjectByName('L_Foot');
+      const foot = M.model.getObjectByName(cfg.foot || 'L_Foot');
       let lo = Infinity, hi = -Infinity;
       for (let t = 0; t < period; t += 1 / 60) { poseAt(M, t); const p = foot.getWorldPosition(new THREE.Vector3()); lo = Math.min(lo, p.z); hi = Math.max(hi, p.z); }
       meta.travel = +(2 * (hi - lo)).toFixed(2);
     }
     out.actions[A.id] = meta;
-    const R = cfg.height * 0.45;
+    const R = cfg.height * (cfg.wide || 0.45); // animals are long: a wider frame
     const frame = { left: -R, right: R, bottom: -cfg.height * 0.15, top: cfg.height * 1.12 };
     for (let f = 0; f < A.frames; f++) {
       if (script) {
         poseAt(M, 0);
         applyScript(M, script, A.once ? f / (A.frames - 1) : f / A.frames, cfg.height);
-      } else poseAt(M, A.once ? (f / (A.frames - 1)) * period * 0.92 : (f / A.frames) * period);
+      } else if (beast) beastPose(M, beast, f, A.frames, cfg.height, base, cfg);
+      else poseAt(M, A.once ? (f / (A.frames - 1)) * period * 0.92 : (f / A.frames) * period);
       if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
       for (let rot = 0; rot < 8; rot++) {
         const s = shoot(M, rot * Math.PI / 4, pitch, cfg.res, cfg.ss, frame, cfg.light);
@@ -322,6 +366,22 @@ window.bake = async (cfg) => {
   return out;
 };
 window.bakeReady = true;
+// Dev aid: where a script puts the hands, against where it asked for them (in heights).
+window.scriptCheck = async (name, script, height) => {
+  const M = await loadModel(`/assets/tripo/${name}/anim-idle.glb`);
+  poseAt(M, 0);
+  const b = worldBox(M), scale = height / (b.max.y - b.min.y);
+  M.holder.scale.setScalar(scale); poseAt(M, 0);
+  const b0 = worldBox(M), c = b0.getCenter(new THREE.Vector3());
+  M.holder.position.set(-c.x, -b0.min.y, -c.z); poseAt(M, 0);
+  const r = (v) => v.toArray().map((x) => +(x / height).toFixed(3));
+  const out = { rest: { R: r(worldPos(boneNamed(M, 'R_Hand'))), L: r(worldPos(boneNamed(M, 'L_Hand'))), RS: r(worldPos(boneNamed(M, 'R_Upperarm'))), head: r(worldPos(boneNamed(M, 'Head'))) } };
+  for (const u of [0, 0.5]) {
+    poseAt(M, 0); applyScript(M, SCRIPTS[script], u, height);
+    out[u] = { R: r(worldPos(boneNamed(M, 'R_Hand'))), L: r(worldPos(boneNamed(M, 'L_Hand'))), gR: r(gripOf(M, 'R', height)), gL: r(gripOf(M, 'L', height)) };
+  }
+  return out;
+};
 // Dev aid: a model's bones, and which bones the vertices farthest from the body (a held spear or
 // hammer) are skinned to.
 window.boneInfo = async (url) => {
@@ -348,20 +408,21 @@ async function loadStatic(url) {
   const gltf = await new GLTFLoader().loadAsync(url);
   const model = gltf.scene;
   const pts = [];
-  const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6); // moved by placeArm
+  // Two cutting planes, moved by placeFused: where the forearm ends, and the wrist.
+  const clip = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6), clip2 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 1e6);
   model.updateMatrixWorld(true);
   model.traverse((o) => {
     if (!o.isMesh) return;
     o.castShadow = o.receiveShadow = true;
     const map = o.material.map;
     if (map) map.colorSpace = THREE.SRGBColorSpace;
-    o.material = new THREE.MeshLambertMaterial({ map, clippingPlanes: [clip] });
+    o.material = new THREE.MeshLambertMaterial({ map, clippingPlanes: [clip, clip2] });
     const pos = o.geometry.attributes.position, v = new THREE.Vector3();
     for (let i = 0; i < pos.count; i += 3) pts.push(v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).clone());
   });
   const holder = new THREE.Group();
   holder.add(model);
-  return { holder, model, pts, clip };
+  return { holder, model, pts, clip, clip2 };
 }
 const avg = (ps) => ps.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / Math.max(1, ps.length));
 // Principal axes of a point cloud (Tripo poses props diagonally, so the bounding box won't do).
@@ -410,7 +471,6 @@ function placeFused(M, F, fr, cfg) {
   const cut = h.distanceTo(e) * k * 0.8;
   M.clip.normal.copy(A);
   M.clip.constant = -H.dot(A) + cut;
-  M.wrist = H.dot(A) - cfg.fistWidth * 0.6; // half a fist and a bit behind the knuckles' middle
   const C = H.clone().sub(A.clone().multiplyScalar(cut - 0.3)), E = V3(fr.elbow), S = V3(cfg.shoulder);
   const tube = (mesh, a, b, r0, r1) => {
     const d = b.clone().sub(a), l = d.length();
@@ -422,6 +482,27 @@ function placeFused(M, F, fr, cfg) {
   tube(M.sleeves[0], C, E, M.sleeveR * k * 0.85, 0);
   M.sleeves[1].position.copy(E); M.sleeves[1].scale.setScalar(M.sleeveR * k * 0.95);
   tube(M.sleeves[2], E, S, M.sleeveR * k, 0);
+  // The wrist: the models hold their weapons in line with the forearm, so the fist and weapon
+  // (a second copy of the model, cut off at the wrist) turn about the palm's axis until the
+  // weapon points the frame's way. The forearm copy ends at the same cut.
+  const W = H.clone().addScaledVector(A, -cfg.fistWidth * 0.6), MH = M.hand;
+  M.clip2.normal.copy(A).negate(); M.clip2.constant = A.dot(W);
+  let qw = new THREE.Quaternion();
+  if (fr.weapon && F.tip) {
+    const w0 = V3(F.tip).sub(h).normalize().applyQuaternion(q).projectOnPlane(P), w1 = V3(fr.weapon).projectOnPlane(P);
+    if (w0.lengthSq() > 1e-4 && w1.lengthSq() > 1e-4) {
+      w0.normalize(); w1.normalize();
+      qw = new THREE.Quaternion().setFromAxisAngle(P, Math.atan2(w0.clone().cross(w1).dot(P), w0.dot(w1)));
+    }
+  }
+  MH.holder.quaternion.copy(qw).multiply(q);
+  MH.holder.scale.setScalar(k);
+  MH.holder.position.copy(M.holder.position).sub(W).applyQuaternion(qw).add(W);
+  MH.holder.updateMatrixWorld(true);
+  const n = A.clone().applyQuaternion(qw);
+  MH.clip.constant = 1e6; MH.clip.normal.set(0, 1, 0);
+  MH.clip2.normal.copy(n); MH.clip2.constant = -n.dot(W);
+  M.sleeves[3].position.copy(W); M.sleeves[3].scale.setScalar(M.sleeveR * k * 0.72);
 }
 // Render whatever is in `objs` from the eye; returns the sprite cropped, at screen coordinates.
 function shootScreen(objs, cfg, rawOut, M) {
@@ -450,27 +531,19 @@ function shootScreen(objs, cfg, rawOut, M) {
   }
   return quantiseScreen(px, W, H, ss, cfg.light, rawOut, mask);
 }
-// Which pixels show the sleeve: everything behind the wrist (the model's own sleeve) and the
-// added linen pieces, drawn white over the rest in black with the same depths.
+// Which pixels show the sleeve: the forearm copy of the model (cut off at the wrist) and the
+// added linen pieces, drawn white, with the fist and weapon in black over the same depths.
 function sleeveMask(M, cam, W, H) {
-  const saved = [], black = new THREE.MeshBasicMaterial({ color: 0, side: THREE.DoubleSide }), white = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
-  const A = M.clip.normal, w = M.wrist; // wrist plane: A.p = w
-  black.clippingPlanes = [M.clip, new THREE.Plane(A.clone(), -w)];
-  const whiteModel = white.clone(); whiteModel.clippingPlanes = [M.clip, new THREE.Plane(A.clone().negate(), w)];
-  M.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = black; } });
+  const saved = [], white = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }), black = new THREE.MeshBasicMaterial({ color: 0, side: THREE.DoubleSide });
+  const whiteArm = white.clone(); whiteArm.clippingPlanes = [M.clip, M.clip2];
+  black.clippingPlanes = [M.hand.clip2];
+  M.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = whiteArm; } });
+  M.hand.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = black; } });
   for (const m of M.sleeves) { saved.push([m, m.material]); m.material = white; }
-  const lights = [ambient, key, fill].map((l) => [l, l.intensity]);
   renderer.shadowMap.enabled = false;
   renderer.render(scene, cam);
-  M.model.traverse((o) => { if (o.isMesh) o.material = whiteModel; });
-  for (const m of M.sleeves) m.visible = false;
-  const auto = renderer.autoClear; renderer.autoClear = false;
-  renderer.render(scene, cam);
-  renderer.autoClear = auto;
-  for (const m of M.sleeves) m.visible = true;
   renderer.shadowMap.enabled = true;
   for (const [o, mat] of saved) o.material = mat;
-  for (const [l, i] of lights) l.intensity = i;
   const gl = renderer.getContext(), px = new Uint8Array(W * H * 4);
   gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px);
   const out = new Uint8Array(W * H);
@@ -509,11 +582,12 @@ window.bakeViewmodel = async (cfg) => {
   const out = { fused: {}, previews: [] };
   for (const [id, F] of Object.entries(cfg.fused || {})) {
     const M = await loadStatic(F.url);
+    M.hand = await loadStatic(F.url);
     if (F.mirror) {
       // Generated as a left hand: flip it into a right one (points and all) before posing.
-      M.model.scale.x *= -1;
+      M.model.scale.x *= -1; M.hand.model.scale.x *= -1;
       for (const p of M.pts) p.x = -p.x;
-      for (const k of ['elbow', 'hand', 'palm']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
+      for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
     }
     const h = V3(F.hand), fore = h.clone().sub(V3(F.elbow)).normalize();
     {
@@ -540,7 +614,7 @@ window.bakeViewmodel = async (cfg) => {
       tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(2, 3); tex.needsUpdate = true;
       const linen = new THREE.MeshLambertMaterial({ map: tex });
       // Forearm and upper arm (unit tubes, sized each frame) and a ball at the elbow.
-      M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen)];
+      M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen)];
       for (const m of M.sleeves) { m.material.side = THREE.DoubleSide; m.castShadow = m.receiveShadow = true; }
     }
     if (cfg.calibrate) {
@@ -550,14 +624,14 @@ window.bakeViewmodel = async (cfg) => {
       for (let r = 0; r < 4; r++) {
         F.palm = p0.clone().applyAxisAngle(fore, r * Math.PI / 2).toArray().map((x) => +x.toFixed(3));
         placeFused(M, F, cfg.moves[F.move][0], cfg);
-        const raw = []; shootScreen([M.holder, ...M.sleeves], cfg, raw); out.previews.push(Object.assign(raw[0], { label: `${id} palm ${F.palm.join(',')}` }));
+        const raw = []; shootScreen([M.holder, M.hand.holder, ...M.sleeves], cfg, raw); out.previews.push(Object.assign(raw[0], { label: `${id} palm ${F.palm.join(',')}` }));
       }
       continue;
     }
     out.fused[id] = cfg.moves[F.move].map((fr) => {
       placeFused(M, F, fr, cfg);
       const raw = [];
-      const s = shootScreen([M.holder, ...M.sleeves], cfg, cfg.preview ? raw : null, M);
+      const s = shootScreen([M.holder, M.hand.holder, ...M.sleeves], cfg, cfg.preview ? raw : null, M);
       if (cfg.preview) out.previews.push(raw[0]);
       return s;
     });
@@ -616,7 +690,7 @@ window.fusedInfo = async (url) => {
   const near = other.filter((p) => p.distanceTo(fist) < 0.12);
   const off = near.length ? avg(near).sub(fist).projectOnPlane(axis) : new THREE.Vector3();
   const r = (p) => p.toArray().map((x) => +x.toFixed(3));
-  return { counts: [sleeve.length, skin.length, other.length], elbow: r(elbow), hand: r(fist), tip: r(tip), palmGuess: r(off.lengthSq() > 1e-6 ? off.normalize() : off) };
+  return { counts: [sleeve.length, skin.length, other.length], elbow: r(elbow), hand: r(fist), tip: r(tip), cuff: r(cuff), palmGuess: r(off.lengthSq() > 1e-6 ? off.normalize() : off) };
 };
 
 // ---- Orthographic reference views (for reading off key points of a model) -------------------

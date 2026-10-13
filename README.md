@@ -33,7 +33,8 @@ You wake up in your mother's house in Brindlemere, a valley town under a purple 
 | Mouse | Look around, including straight up and down. Click the view to capture the cursor, or drag if your browser won't capture it |
 | Arrow keys | Move and turn without a mouse |
 | `Shift` | Run |
-| Click, `Space` | Attack |
+| Click | Attack |
+| `Space` | Jump |
 | `E` or `F` | Talk, open, pick up, search |
 | `I` or `Tab` | Inventory |
 | `J` | Journal |

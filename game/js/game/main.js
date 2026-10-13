@@ -181,7 +181,7 @@
   // ---- Input ----
   const keys = new Set();
   const input = { fwd: 0, strafe: 0, turn: 0, run: false, attack: false, lookX: 0, lookY: 0 };
-  let locked = false, attackQueued = false;
+  let locked = false, attackQueued = false, jumpQueued = false;
   // Where pointer lock is refused (some embedded frames), look by dragging instead.
   let dragLook = false, drag = null;
   const touchState = { mx: 0, my: 0, lookX: 0, lookY: 0, attack: false };
@@ -228,7 +228,7 @@
     else if (k === 'm') UI.map();
     else if (k === 't') { if (map.outdoor || map.id === 'home') UI.sleep('wait'); else notify("You can't wait here. Try outside, or rent a room.", 'item'); }
     else if (k === 'h') quickHeal();
-    else if (k === ' ') { e.preventDefault(); attackQueued = true; }
+    else if (k === ' ') { e.preventDefault(); if (!e.repeat) jumpQueued = true; }
     if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(k)) e.preventDefault();
   });
   document.addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
@@ -240,6 +240,8 @@
     input.turn = (k('arrowright') ? 1 : 0) - (k('arrowleft') ? 1 : 0);
     input.run = k('shift');
     input.attack = attackQueued || touchState.attack;
+    input.jump = jumpQueued;
+    jumpQueued = false;
     input.lookX += touchState.lookX; input.lookY += touchState.lookY;
     touchState.lookX = 0; touchState.lookY = 0; touchState.attack = false;
     attackQueued = false;
@@ -310,7 +312,8 @@
       if (p.y > 0) { p.vy -= 300 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; if (p.y <= 0) { p.y = 0.2; p.vx = p.vz = 0; } }
     }
     for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
-    // Footsteps
+    // Footsteps, and a thud when a jump lands.
+    if (Player.landed) { Player.landed = false; sfx('step', map.floorAt(Math.floor(Player.x / TILE), Math.floor(Player.z / TILE)).id); }
     const step = Math.floor(Player.bobT / Math.PI);
     if (step !== lastStep) {
       lastStep = step;

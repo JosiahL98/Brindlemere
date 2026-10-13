@@ -1,0 +1,210 @@
+[
+  {
+    "at": "2026-10-13T11:19:45.861Z",
+    "kind": "text",
+    "task_id": "167d5366-258e-48b8-b9aa-d37a805abc77",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a farmer, a sturdy man in his thirties. Messy brown hair under a wide straw hat, brown stubble, tanned weathered skin, brown eyes. A muddy olive-green wool tunic with a red neckerchief, brown trousers, mud-caked leather boots. He holds a wooden pitchfork upright in his right hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:27:33.935Z",
+    "kind": "rigcheck",
+    "task_id": "6066cf78-9daf-43cf-acf4-df17ad4dc3b0",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "167d5366-258e-48b8-b9aa-d37a805abc77"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:27:41.952Z",
+    "kind": "rig",
+    "task_id": "3327f34a-3b4a-43b5-aaf8-417daf2e7b8a",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "167d5366-258e-48b8-b9aa-d37a805abc77",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:27:54.096Z",
+    "kind": "animate",
+    "task_id": "183ed617-09bc-4ae0-a7e7-3679d5013048",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3327f34a-3b4a-43b5-aaf8-417daf2e7b8a",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:02.454Z",
+    "kind": "animate",
+    "task_id": "cee095ac-a126-4e7b-b5db-c3a0e1586be6",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3327f34a-3b4a-43b5-aaf8-417daf2e7b8a",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:10.871Z",
+    "kind": "animate",
+    "task_id": "4fcbc848-2bf1-4a6f-9a1e-723250ffe955",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3327f34a-3b4a-43b5-aaf8-417daf2e7b8a",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T12:03:44.475Z",
+    "kind": "text",
+    "task_id": "4fbba71f-0578-41a6-a6c2-f919de2bda42",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a farmer, a sturdy man in his thirties. Messy brown hair under a wide straw hat, brown stubble, tanned weathered skin, brown eyes. A muddy olive-green wool tunic with a red neckerchief, brown trousers, mud-caked leather boots. His hands are empty, open and relaxed, holding nothing. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform, weapon, spear, pole, staff, pitchfork, tool, sword, holding an object"
+    },
+    "files": [
+      "model-2.glb",
+      "preview-2.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T12:03:49.343Z",
+    "kind": "rigcheck",
+    "task_id": "b885d04b-f217-43c3-8332-3d3089c404de",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "4fbba71f-0578-41a6-a6c2-f919de2bda42"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T12:03:56.642Z",
+    "kind": "rig",
+    "task_id": "3724b800-5b40-4a31-81a5-167299ea280c",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "4fbba71f-0578-41a6-a6c2-f919de2bda42",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T12:04:05.314Z",
+    "kind": "animate",
+    "task_id": "d55e8ff5-5cf5-46bc-bfa7-3fb400e4e26f",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3724b800-5b40-4a31-81a5-167299ea280c",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T12:04:13.674Z",
+    "kind": "animate",
+    "task_id": "55a3930d-9330-4295-aebf-286713ebd82d",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3724b800-5b40-4a31-81a5-167299ea280c",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T12:04:22.050Z",
+    "kind": "animate",
+    "task_id": "d427b24e-4a29-407b-950e-9a32f55e103e",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "3724b800-5b40-4a31-81a5-167299ea280c",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  }
+]

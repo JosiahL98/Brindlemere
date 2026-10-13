@@ -3,10 +3,11 @@
 // front of you to interact with.
 
 const Player = {
-  x: 0, z: 0, ang: 0, pitch: 0, r: 13, eye: 50, bobT: 0, moving: 0,
+  x: 0, z: 0, ang: 0, pitch: 0, r: 13, eye: 50, bobT: 0, moving: 0, y: 0, vy: 0, landed: false,
   swing: null, sinceHurt: 99, sinceRun: 99, target: null,
 };
 const WALK = 140, RUN = 235, EYE = 50;
+const JUMP_SPEED = 190, GRAVITY = 950; // a hop about 20 units high, 0.4 s in the air
 
 function updatePlayer(dt, input, map, ents, ctx) {
   const P = Player;
@@ -31,8 +32,15 @@ function updatePlayer(dt, input, map, ents, ctx) {
   }
   const moved = Math.hypot(P.x - ox, P.z - oz);
   P.moving = moved / Math.max(dt, 1e-4);
-  if (moved > 0.2) P.bobT += moved / 26;
-  P.eye = EYE + Math.sin(P.bobT * 2) * (moved > 0.2 ? 1.6 : 0) * (running ? 1.4 : 1);
+  // Jump: straight up and down again, carried along by whatever movement you had.
+  if (input.jump && P.y === 0 && G.p.st >= 5) { P.vy = JUMP_SPEED; G.p.st -= 5; P.sinceRun = 0; }
+  if (P.y > 0 || P.vy > 0) {
+    P.vy -= GRAVITY * dt; P.y += P.vy * dt;
+    if (P.y <= 0) { P.y = 0; P.vy = 0; P.landed = true; }
+  }
+  const grounded = P.y === 0;
+  if (moved > 0.2 && grounded) P.bobT += moved / 26;
+  P.eye = EYE + P.y + (grounded ? Math.sin(P.bobT * 2) * (moved > 0.2 ? 1.6 : 0) * (running ? 1.4 : 1) : 0);
   // Stamina and health
   if (running && moved > 0.2) { G.p.st = Math.max(0, G.p.st - 14 * dt); P.sinceRun = 0; } else P.sinceRun += dt;
   if (P.sinceRun > 0.8 && !P.swing) G.p.st = Math.min(maxSt(), G.p.st + 11 * dt);

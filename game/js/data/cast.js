@@ -83,6 +83,8 @@ function ACTOR_DEFS() {
   if (_actorDefs) return _actorDefs;
   _actorDefs = {};
   for (const [id, c] of Object.entries(CAST)) _actorDefs[id] = typeof BAKED === 'object' && BAKED[id] ? bakedDef(id, c.look) : makePerson(id, c.look);
-  if (typeof BEASTS === 'object') for (const [id, b] of Object.entries(BEASTS)) _actorDefs[id] = b;
+  // Animals baked from Tripo models keep their sculpted definition's shadow and the like; the
+  // bake already has them at their in-game size.
+  if (typeof BEASTS === 'object') for (const [id, b] of Object.entries(BEASTS)) _actorDefs[id] = typeof BAKED === 'object' && BAKED[id] ? Object.assign({}, b, bakedDef(id, null), { scale: 1 }) : b;
   return _actorDefs;
 }

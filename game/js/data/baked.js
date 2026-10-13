@@ -45,8 +45,10 @@ async function loadBaked() {
     for (const [action, frame, rot, w, h, ax, ay] of B.index) {
       ActorSprites.pinned.set(ActorSprites.key(id, action, frame, rot), { w, h, ax, ay, res: B.res, data: take(w, h) });
     }
-    const [w, h, ax, ay, res] = B.portrait;
-    ACTOR_DEFS()[id].portrait = coarsePortrait({ w, h, ax, ay, res, data: take(w, h) });
+    if (B.portrait) {
+      const [w, h, ax, ay, res] = B.portrait;
+      ACTOR_DEFS()[id].portrait = coarsePortrait({ w, h, ax, ay, res, data: take(w, h) });
+    }
     delete B.data; // the cache holds it now
   }
   if (BAKED_VM.data || BAKED_VM.parts) {

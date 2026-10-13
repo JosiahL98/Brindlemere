@@ -39,7 +39,7 @@ function layerSprites(back, bx, by, front) {
 }
 // Which baked arm-and-weapon model each item uses (tools/bake-viewmodel.js).
 const VM_BAKED_WEAPON = { fists: 'empty', wood_club: 'club', iron_dagger: 'dagger', rusty_dagger: 'rusty_dagger', fishing_knife: 'knife', smith_hammer: 'hammer',
-  iron_sword: 'sword', bram_sword: 'sword', steel_longsword: 'sword', iron_axe: 'axe', iron_mace: 'mace' };
+  iron_sword: 'sword', bram_sword: 'sword', steel_longsword: 'longsword', iron_axe: 'axe', iron_mace: 'mace' };
 // The linen sleeve bakes to the STONE ramp, which nothing else in these sprites uses; it takes
 // the colour of the tunic worn, shade for shade, or turns to riveted rings under a mail shirt.
 const VM_SLEEVE_SHIFT = { OLIVE: -1, BONE: 1, BROWN: -3, RUST: -2 };

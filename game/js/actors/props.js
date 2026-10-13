@@ -276,7 +276,8 @@ defProp('barrel', {
     s.ellipsoid(F(0, 11, 0), [9, 12, 9], staves, { clip: [0, 1, 0, 21], tf: F(0, 11, 0) });
     s.ellipsoid(F(0, 11, 0), [9, 12, 9], staves, { clip: [0, -1, 0, -1] });
     for (const y of [4, 18]) s.torus(F(0, y, 0), 8.4, 0.7, PM.iron);
-    s.limb(at(0, 20.5, 0), at(0, 21, 0), 7.6, 7.6, PM.woodDark);
+    // A flat lid, set just inside the top of the staves.
+    s.cylinder(F(0, 20.6, 0), 7.8, 0.6, 0.3, PM.woodDark);
   },
 });
 defProp('crate', {

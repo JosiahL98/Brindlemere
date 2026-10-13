@@ -61,40 +61,44 @@ function poseAt(keys, t) {
   const [p0, p1, p2, p3] = [arms[i0].elbow, arms[i].elbow, arms[i + 1].elbow, arms[i3].elbow];
   const elbow = [0, 1, 2].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3));
   const s = smooth(u), fore = slerp(arms[i].fore, arms[i + 1].fore, s);
-  return { hand: add(elbow, mul(fore, FORE)), fore, palm: slerp(norm(keys[i].palm), norm(keys[i + 1].palm), s), elbow };
+  // The weapon's direction, which the wrist turns it to (the punch has none).
+  const weapon = keys[i].weapon && keys[i + 1].weapon ? slerp(norm(keys[i].weapon), norm(keys[i + 1].weapon), s) : undefined;
+  return { hand: add(elbow, mul(fore, FORE)), fore, palm: slerp(norm(keys[i].palm), norm(keys[i + 1].palm), s), elbow, weapon };
 }
 // Each move: keyframes over the swing (phase 0 = ready, 0.42 = the blow lands, 1.15 = done, as
 // in game/js/game/player.js) and the phases its frames are sampled at. Frame 0 is the ready pose.
-const READY = { elbow: [10.4, -13.6, -7.2], fore: [-0.2, 0.59, -0.78], palm: [-1, 0.1, 0] };
+// Keys give the elbow, the forearm's direction, which way the palm faces and where the weapon
+// points; the wrist bends between forearm and weapon, so the weapon can lag and then whip through.
+// At rest the arm is held forward, palm to the left, the weapon standing up from the fist.
+const READY = { elbow: [9.5, -10, -6], fore: [-0.2, 0.25, -0.95], palm: [-1, 0, 0], weapon: [-0.1, 0.95, -0.3] };
 const MOVES = {
-  // Overhead chop: the arm rises past the right of the head, then the forearm and weapon come
-  // over and down across the view, turning about an elbow at the right edge as it drops; palm
-  // to the left all the way.
+  // Overhead chop: the arm rises to the right with the weapon cocked back over the shoulder, then
+  // sweeps down and across, the weapon whipping over to the left and down after the forearm.
   chop: {
     keys: [
       { at: 0, ...READY },
-      { at: 0.12, elbow: [11, -9, -8], fore: [-0.05, 0.92, -0.38], palm: [-1, 0, 0] },
-      { at: 0.24, elbow: [11, -2, -8], fore: [0, 0.85, 0.5], palm: [-1, 0, 0] },
-      { at: 0.28, elbow: [11, 0, -10.5], fore: [-0.3, 0.85, -0.45], palm: [-1, 0, 0] },
-      { at: 0.35, elbow: [11.5, -0.5, -11], fore: [-0.75, 0.45, -0.48], palm: [-1, 0, 0] },
-      { at: 0.42, elbow: [12, -1.5, -11.5], fore: [-0.65, -0.45, -0.6], palm: [-1, 0, 0] },
-      { at: 0.48, elbow: [11, -5, -11], fore: [-0.45, -0.75, -0.5], palm: [-1, 0, 0] },
-      { at: 0.56, elbow: [10.5, -10, -9.5], fore: [-0.4, -0.6, -0.7], palm: [-1, 0, 0] },
-      { at: 0.7, elbow: [10.5, -14, -7.5], fore: [-0.3, 0.2, -0.93], palm: [-1, 0, 0] },
+      { at: 0.1, elbow: [10.5, -6, -8], fore: [-0.1, 0.5, -0.86], palm: [-1, 0, 0], weapon: [0, 0.9, 0.4] },
+      { at: 0.2, elbow: [11, -2, -10], fore: [-0.12, 0.55, -0.83], palm: [-1, 0, 0], weapon: [0.15, 0.7, 0.7] },
+      { at: 0.3, elbow: [11, 1, -12], fore: [-0.7, 0.35, -0.62], palm: [-1, 0, 0], weapon: [-0.2, 0.95, 0.1] },
+      { at: 0.36, elbow: [10.5, -0.5, -12.5], fore: [-0.8, 0.1, -0.58], palm: [-1, 0, 0], weapon: [-0.7, 0.7, -0.1] },
+      { at: 0.42, elbow: [10, -2, -12.5], fore: [-0.78, -0.2, -0.6], palm: [-1, 0, 0], weapon: [-0.6, -0.75, -0.25] },
+      { at: 0.5, elbow: [9.5, -4.5, -11.5], fore: [-0.6, -0.55, -0.58], palm: [-1, 0, 0], weapon: [-0.3, -0.95, -0.1] },
+      { at: 0.7, elbow: [9.5, -11, -6.5], fore: [-0.2, -0.05, -0.98], palm: [-1, 0, 0], weapon: [-0.1, 0.5, -0.85] },
       { at: 1.15, ...READY },
     ],
-    frames: [0, 0.1, 0.2, 0.27, 0.33, 0.38, 0.42, 0.48, 0.56, 0.7, 0.9],
+    frames: [0, 0.1, 0.2, 0.27, 0.32, 0.37, 0.42, 0.47, 0.54, 0.7, 0.9],
   },
-  // A sweep for blades: the palm turns up, the arm draws back to the right and the blade sweeps
-  // across to the left at chest height.
+  // A sweep for blades: the palm turns up, the arm draws back to the right with the blade
+  // trailing, then the blade sweeps across in front and on round to the left.
   slash: {
     keys: [
       { at: 0, ...READY },
-      { at: 0.15, elbow: [12, -8, -8], fore: [0.35, 0.15, -0.92], palm: [0, 1, 0] },
-      { at: 0.3, elbow: [11, -7, -10], fore: [-0.1, 0.12, -0.99], palm: [0, 1, 0] },
-      { at: 0.42, elbow: [9.5, -6.5, -12], fore: [-0.7, 0.1, -0.7], palm: [0, 1, 0] },
-      { at: 0.55, elbow: [8, -7, -12], fore: [-0.97, 0.05, -0.25], palm: [0, 1, 0] },
-      { at: 0.75, elbow: [10, -12, -8], fore: [-0.5, 0.2, -0.85], palm: [-0.7, 0.7, 0] },
+      { at: 0.12, elbow: [10.5, -8, -8], fore: [0.15, 0.12, -0.98], palm: [0, 1, 0], weapon: [0.85, 0.2, -0.5] },
+      { at: 0.27, elbow: [10, -7.5, -10], fore: [-0.1, 0.1, -0.99], palm: [0, 1, 0], weapon: [0.4, 0.1, -0.9] },
+      { at: 0.42, elbow: [9.5, -6.5, -11.5], fore: [-0.5, 0.08, -0.86], palm: [0, 1, 0], weapon: [-0.45, 0.05, -0.9] },
+      { at: 0.52, elbow: [8.5, -6.5, -12], fore: [-0.85, 0.05, -0.52], palm: [0, 1, 0], weapon: [-0.97, 0, -0.2] },
+      { at: 0.62, elbow: [8, -7, -11], fore: [-0.95, 0, -0.25], palm: [0, 1, 0], weapon: [-0.75, 0, 0.65] },
+      { at: 0.85, elbow: [9.5, -10, -7], fore: [-0.4, 0.15, -0.9], palm: [-0.7, 0.7, 0], weapon: [-0.2, 0.9, -0.4] },
       { at: 1.15, ...READY },
     ],
     frames: [0, 0.08, 0.16, 0.25, 0.32, 0.37, 0.42, 0.48, 0.56, 0.72, 0.92],
@@ -119,21 +123,22 @@ for (const [id, M] of Object.entries(MOVES)) moves[id] = M.frames.map((t) => pos
 
 // ---- The models -------------------------------------------------------------------------------
 // Points read off each model (tools/model-views.js, or window.fusedInfo): the elbow end and the
-// middle of the fist; palm: which way the palm faces, in the model (from --calibrate). mirror:
-// the model came out as a left hand.
+// middle of the fist, and the weapon's tip; palm: which way the palm faces, in the model (from
+// --calibrate). mirror: the model came out as a left hand.
 const cfg = {
   ss: 4, fistWidth: 4, shoulder: SHOULDER, preview: preview || calibrate, rawFull: big, calibrate, moves,
   light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.75, dither: 10 },
   fused: {
     empty: { url: T('fp-empty'), move: 'punch', elbow: [0.005, -0.317, 0.031], hand: [0, 0.37, -0.03], palm: [1, 0, 0] },
-    club: { url: T('fp-club', 2), move: 'chop', mirror: true, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], palm: [0, -0.211, -0.977] },
-    hammer: { url: T('fp-hammer'), move: 'chop', mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], palm: [0, -0.691, -0.723] },
-    knife: { url: T('fp-knife'), move: 'slash', elbow: [0.09, -0.458, -0.126], hand: [-0.009, -0.044, 0.083], palm: [0, -0.451, 0.893] },
-    dagger: { url: T('fp-dagger'), move: 'slash', elbow: [0.026, -0.475, -0.018], hand: [-0.003, 0.058, 0.053], palm: [0, -0.132, 0.991] },
-    rusty_dagger: { url: T('fp-rusty-dagger'), move: 'slash', elbow: [0.129, -0.435, -0.009], hand: [0.0, -0.12, 0.003], palm: [0, -0.038, 0.999] },
-    sword: { url: T('fp-sword', 3), move: 'slash', elbow: [0.013, -0.476, 0.001], hand: [-0.043, 0.055, 0.006], palm: [0, -0.009, 1] },
-    axe: { url: T('fp-axe'), move: 'chop', elbow: [-0.013, -0.441, -0.141], hand: [0.011, -0.163, 0.013], palm: [0, -0.485, 0.875] },
-    mace: { url: T('fp-mace'), move: 'chop', elbow: [0.049, -0.376, 0.028], hand: [0.001, 0.065, -0.022], palm: [0, 0.113, 0.994] },
+    club: { url: T('fp-club', 2), move: 'chop', mirror: true, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], tip: [0.004, 0.5, 0.043], palm: [0, -0.211, -0.977] },
+    hammer: { url: T('fp-hammer'), move: 'chop', mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25], palm: [0, -0.691, -0.723] },
+    knife: { url: T('fp-knife'), move: 'slash', elbow: [0.09, -0.458, -0.126], hand: [-0.009, -0.044, 0.083], tip: [-0.223, 0.489, 0.286], palm: [0, -0.451, 0.893] },
+    dagger: { url: T('fp-dagger'), move: 'slash', elbow: [0.026, -0.475, -0.018], hand: [-0.003, 0.058, 0.053], tip: [-0.005, 0.492, 0.052], palm: [0, -0.132, 0.991] },
+    rusty_dagger: { url: T('fp-rusty-dagger'), move: 'slash', elbow: [0.129, -0.435, -0.009], hand: [0.0, -0.12, 0.003], tip: [-0.237, 0.5, 0.011], palm: [0, -0.038, 0.999] },
+    longsword: { url: T('fp-longsword'), move: 'slash', elbow: [0.021, -0.435, 0.45], hand: [0.021, -0.173, -0.197], tip: [-0.105, 0.478, -0.299], palm: [-1, 0, 0] },
+    sword: { url: T('fp-sword', 3), move: 'slash', elbow: [0.013, -0.476, 0.001], hand: [-0.043, 0.055, 0.006], tip: [-0.127, 0.493, -0.027], palm: [0, -0.009, 1] },
+    axe: { url: T('fp-axe'), move: 'chop', elbow: [-0.013, -0.441, -0.141], hand: [0.011, -0.163, 0.013], tip: [0.03, 0.472, 0.289], palm: [0, -0.485, 0.875] },
+    mace: { url: T('fp-mace'), move: 'chop', elbow: [0.049, -0.376, 0.028], hand: [0.001, 0.065, -0.022], tip: [-0.151, 0.481, 0.02], palm: [0, 0.113, 0.994] },
   },
 };
 if (process.env.VM_ONLY) { const keep = process.env.VM_ONLY.split(','); for (const id of Object.keys(cfg.fused)) if (!keep.includes(id)) delete cfg.fused[id]; }

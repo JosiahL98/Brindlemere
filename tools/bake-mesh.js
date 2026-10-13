@@ -2,7 +2,9 @@
 // game sprites, using three.js in headless Chrome (tools/bake/). Writes
 // game/js/data/baked/<name>.js and a contact sheet at tools/out/baked-<name>.png.
 //   node tools/bake-mesh.js elsa [--height 58] [--res 2.5] [--actions idle=idle:4,walk=walk:8:cycle,talk=agree:4]
-//   (an action is id=clip:frames, optionally :cycle to find the loop in a long clip, or :once for a strike)
+//   (an action is id=clip:frames, optionally :cycle to find the loop in a long clip, or :once for a strike;
+//   a clip named @hammer, @thrust or @fork is posed by script over the idle clip instead)
+//   --prop spear|pitchfork  gives the villager a pole to hold
 // Needs `npm install` in tools/ (three, puppeteer-core) and Chrome.
 'use strict';
 const fs = require('fs');
@@ -18,20 +20,25 @@ const opt = (n, d) => { const i = args.indexOf('--' + n); if (i < 0) return d; c
 const height = +opt('height', 58);
 const res = +opt('res', 1.5); // sprite pixels per world unit (villagers sculpted at runtime use 1.5)
 const actionSpec = opt('actions', 'idle=idle:6,walk=walk:8:cycle,talk=agree:6');
+const prop = opt('prop', null); // spear or pitchfork: a pole held in the hands (see tools/bake/bake.mjs)
+// Animals: --wide (frame half-width, in heights), --foot (the bone whose sweep gives the walk's
+// stride), --flip (dies on its back). Actions named !rest, !lunge, !flinch, !die are posed by script.
+const wide = +opt('wide', 0.45), foot = opt('foot', 'L_Foot'), flip = args.includes('--flip');
+if (flip) args.splice(args.indexOf('--flip'), 1);
 const chrome = opt('chrome', 'C:/Program Files/Google/Chrome/Application/chrome.exe');
 const name = args[0];
 if (!name) { console.error('usage: node tools/bake-mesh.js <name> [--height 58] [--actions ...]'); process.exit(1); }
 
 const cfg = {
-  name, height, res, ss: 4, pitchDeg: 9,
+  name, height, res, ss: 4, pitchDeg: 9, prop, wide, foot, flip,
   actions: actionSpec.split(',').map((s) => {
     // flags: cycle (find the loop inside a longer clip), once (plays through once, e.g. a strike)
     // An optional 4th field speeds playback up (work=chop:6:cycle:2.5).
     const [id, rest] = s.split('='); const [clip, frames, flag, speed] = rest.split(':');
     return { id, clip, frames: +frames, cycle: flag === 'cycle', once: flag === 'once', speed: +speed || 1 };
   }),
-  // Head and shoulders for the dialogue panel, framed like renderPortrait().
-  portrait: { res: 3, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },
+  // Head and shoulders for the dialogue panel, framed like renderPortrait() (not for animals).
+  portrait: args.includes('--no-portrait') ? null : { res: 3, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },
   light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.72, dither: 9 },
   debugRaw: args.includes('--raw'),
 };
@@ -58,10 +65,12 @@ function png(w, h, rgba) {
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ih), chunk('IDAT', zlib.deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 // Contact sheet: one row per action frame, eight rotations across, then the portrait.
+let palLoaded = false;
 function sheet(result, file) {
-  for (const s of ['math.js', 'palette.js']) vm.runInThisContext(fs.readFileSync(path.join(root, 'js', s), 'utf8'));
+  if (!palLoaded) for (const s of ['math.js', 'palette.js']) vm.runInThisContext(fs.readFileSync(path.join(root, 'js', s), 'utf8'));
+  palLoaded = true;
   const S = 3, cellW = Math.max(...result.sprites.map((s) => s.w)) + 4, cellH = Math.max(...result.sprites.map((s) => s.h)) + 4;
-  const rows = result.sprites.length / 8, pr = result.portrait;
+  const rows = result.sprites.length / 8, pr = result.portrait || { w: 1, h: 1, ax: 0, ay: 0, data: [0] };
   const W = Math.max(cellW * 8, pr.w + 4) * S, H = (cellH * rows + pr.h + 8) * S;
   const img = new Uint8Array(W * H * 4);
   for (let i = 0; i < W * H; i++) img.set([58, 52, 66, 255], i * 4);
@@ -106,16 +115,18 @@ function sheet(result, file) {
   let off = 0;
   for (const s of result.sprites) { index.push([s.action, s.frame, s.rot, s.w, s.h, s.ax, s.ay]); parts.push(Uint8Array.from(s.data)); off += s.data.length; }
   const pr = result.portrait;
-  parts.push(Uint8Array.from(pr.data));
+  if (pr) parts.push(Uint8Array.from(pr.data));
   const raw = Buffer.concat(parts.map((p) => Buffer.from(p)));
   const packed = zlib.deflateRawSync(raw, { level: 9 });
   const out = path.join(root, 'game', 'js', 'data', 'baked', `${name}.js`);
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  const meta = { res: cfg.res, height: result.height, actions: result.actions, index, portrait: [pr.w, pr.h, pr.ax, pr.ay, cfg.portrait.res] };
+  const meta = { res: cfg.res, height: result.height, actions: result.actions, index, portrait: pr ? [pr.w, pr.h, pr.ax, pr.ay, cfg.portrait.res] : null };
   fs.writeFileSync(out, `'use strict';\n// Baked by tools/bake-mesh.js from assets/tripo/${name}/ (a Tripo model, rigged and animated). Do not edit.\n`
     + `BAKED[${JSON.stringify(name)}] = Object.assign(${JSON.stringify(meta)}, {\n  data: '${packed.toString('base64')}',\n});\n`);
   console.log(`wrote ${path.relative(root, out)}: ${(raw.length / 1024).toFixed(0)} KB of pixels, ${(packed.length / 1024).toFixed(0)} KB packed`);
   const sheetFile = path.join(root, 'tools', 'out', `baked-${name}.png`);
   sheet(result, sheetFile);
+  // And one sheet per action, for checking a single move.
+  for (const id of Object.keys(result.actions)) sheet({ sprites: result.sprites.filter((sp) => sp.action === id), portrait: { w: 1, h: 1, ax: 0, ay: 0, data: [0] } }, path.join(root, 'tools', 'out', `baked-${name}-${id}.png`));
   console.log(`contact sheet ${path.relative(root, sheetFile)}`);
 })().catch((e) => { console.error(e); process.exit(1); });

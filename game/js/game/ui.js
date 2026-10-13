@@ -341,7 +341,7 @@ const UI = {
     }
     $('#loot-all').disabled = !entries.length;
   },
-  lootAll() { for (const [it, n] of Object.entries(this.lootItems)) if (n > 0) this.lootTake(it, n); this.close(); },
+  lootAll() { if (!this.lootItems) return; for (const [it, n] of Object.entries(this.lootItems)) if (n > 0) this.lootTake(it, n); this.close(); },
 
   // ---- Reading ----
   read(title, html) {
