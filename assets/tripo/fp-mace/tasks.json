@@ -1,0 +1,24 @@
+[
+  {
+    "at": "2026-10-13T11:33:31.846Z",
+    "kind": "text",
+    "task_id": "163e447f-2003-446a-be4a-4714ec9fc5eb",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand held upright, gripping the weapon in a firm natural grip, all four fingers wrapped around the grip and the thumb wrapped over them. The weapon is an iron flanged mace on a straight oak haft that rises straight up out of the top of the fist above the thumb, a heavy iron head with six flanges at the top. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and weapon only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal, horizontal weapon, sheath"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  }
+]

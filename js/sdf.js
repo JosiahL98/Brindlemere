@@ -3,7 +3,7 @@
 // primitives ("clay"), then ray-marched at sprite resolution, lit, and snapped to palette ramps.
 // One world unit = one sprite pixel.
 
-const T_SPHERE = 0, T_CONE = 1, T_ELLIPSOID = 2, T_BOX = 3, T_TORUS = 4;
+const T_SPHERE = 0, T_CONE = 1, T_ELLIPSOID = 2, T_BOX = 3, T_TORUS = 4, T_CYL = 5;
 
 // Material: which ramp a surface uses and how it responds to light.
 function mat(ramp, o = {}) {
@@ -112,6 +112,16 @@ class Shape {
     };
     return this._add(p, m, o, f);
   }
+  // Upright cylinder along the frame's local y axis: radius r, half-height h, edges rounded off.
+  cylinder(f, r, h, round, m, o) {
+    round = Math.min(round || 0, r, h);
+    const p = {
+      t: T_CYL, cx: f.o[0], cy: f.o[1], cz: f.o[2],
+      xx: f.x[0], xy: f.x[1], xz: f.x[2], yx: f.y[0], yy: f.y[1], yz: f.y[2], zx: f.z[0], zy: f.z[1], zz: f.z[2],
+      R: r - round, hy: h - round, rr: round, bc: f.o, br: Math.hypot(r, h),
+    };
+    return this._add(p, m, o, f);
+  }
   point(name, p) { this.points[name] = p; }
 }
 
@@ -169,6 +179,16 @@ function primDist(p, x, y, z) {
       const lz = dx * p.zx + dy * p.zy + dz * p.zz;
       const q = Math.sqrt(lx * lx + lz * lz) - p.R;
       d = Math.sqrt(q * q + ly * ly) - p.r;
+      break;
+    }
+    case T_CYL: {
+      const dx = x - p.cx, dy = y - p.cy, dz = z - p.cz;
+      const lx = dx * p.xx + dy * p.xy + dz * p.xz;
+      const ly = dx * p.yx + dy * p.yy + dz * p.yz;
+      const lz = dx * p.zx + dy * p.zy + dz * p.zz;
+      const qx = Math.sqrt(lx * lx + lz * lz) - p.R, qy = Math.abs(ly) - p.hy;
+      const ox = qx > 0 ? qx : 0, oy = qy > 0 ? qy : 0;
+      d = Math.min(Math.max(qx, qy), 0) + Math.sqrt(ox * ox + oy * oy) - p.rr;
       break;
     }
   }

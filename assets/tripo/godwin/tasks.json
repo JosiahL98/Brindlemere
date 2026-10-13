@@ -1,0 +1,106 @@
+[
+  {
+    "at": "2026-10-13T11:19:52.124Z",
+    "kind": "text",
+    "task_id": "7f27dddd-91c4-414c-be32-d0e4d2a783ea",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: the village miller, a thin old man in his late sixties. Short white hair under a floppy off-white linen cap, a white moustache, pale skin, blue eyes, a gentle, worried face. A flour-dusted undyed off-white linen tunic belted at the waist, brown wool trousers, worn leather shoes. Empty hands. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:26:18.633Z",
+    "kind": "rigcheck",
+    "task_id": "0065eb14-89f5-410e-ad98-aadd651278d7",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "7f27dddd-91c4-414c-be32-d0e4d2a783ea"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:26:27.202Z",
+    "kind": "rig",
+    "task_id": "a0352155-7553-42cf-b3d9-ec08e81b87b3",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "7f27dddd-91c4-414c-be32-d0e4d2a783ea",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:26:36.147Z",
+    "kind": "animate",
+    "task_id": "d1125f2a-14a3-43af-8f0d-c8341526b879",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a0352155-7553-42cf-b3d9-ec08e81b87b3",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:26:44.599Z",
+    "kind": "animate",
+    "task_id": "536a643a-5bf5-4487-846b-c686670be15b",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a0352155-7553-42cf-b3d9-ec08e81b87b3",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:26:50.165Z",
+    "kind": "animate",
+    "task_id": "af85f000-5998-4601-9e56-d0f233bc80fe",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a0352155-7553-42cf-b3d9-ec08e81b87b3",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  }
+]

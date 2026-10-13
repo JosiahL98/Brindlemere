@@ -1,0 +1,106 @@
+[
+  {
+    "at": "2026-10-13T11:19:55.250Z",
+    "kind": "text",
+    "task_id": "0fdf7fc4-107e-483f-bc57-919c023d244d",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a frail old widow in her seventies. White hair in a bun, grey eyes, a lined pale face, slightly stooped. A long dark purple wool dress to the ankles, a faded purple knitted shawl around her shoulders, a grey apron, plain shoes. She carries a small wicker basket on her left forearm. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:26:54.914Z",
+    "kind": "rigcheck",
+    "task_id": "35cbd7ce-7395-4b86-8adc-3f8fa0724c01",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "0fdf7fc4-107e-483f-bc57-919c023d244d"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:27:06.069Z",
+    "kind": "rig",
+    "task_id": "100274f5-9372-4673-90d0-d06d5ccbb3fe",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "0fdf7fc4-107e-483f-bc57-919c023d244d",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:27:14.802Z",
+    "kind": "animate",
+    "task_id": "984d6d52-f10d-4003-85e3-f1cf5397a656",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "100274f5-9372-4673-90d0-d06d5ccbb3fe",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:27:20.252Z",
+    "kind": "animate",
+    "task_id": "64fff03e-dd37-4438-ae48-86b1cacff17a",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "100274f5-9372-4673-90d0-d06d5ccbb3fe",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:27:29.185Z",
+    "kind": "animate",
+    "task_id": "94cc8e54-39ae-4e2e-8ed1-6f70cbd0c91d",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "100274f5-9372-4673-90d0-d06d5ccbb3fe",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  }
+]

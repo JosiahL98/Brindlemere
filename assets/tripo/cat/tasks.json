@@ -1,0 +1,95 @@
+[
+  {
+    "at": "2026-10-13T11:20:19.906Z",
+    "kind": "text",
+    "task_id": "fa611bf6-75f5-4cfd-b34d-b0589848c5e8",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D animal: a ginger tabby house cat with orange fur and darker orange stripes, a cream chest and paws, green eyes, a long tail curving upward. Standing still on all four legs in a neutral pose, legs straight and slightly apart, head forward, facing sideways, mouth closed. Realistic anatomy and proportions, not stylised, a creature for a dark-fantasy medieval game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, stylised, cute, big eyes, multiple animals, base, pedestal, platform, rock, ground, saddle, human"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:29:36.745Z",
+    "kind": "rigcheck",
+    "task_id": "14224ca1-1795-4aaf-8a37-4795f0883881",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "fa611bf6-75f5-4cfd-b34d-b0589848c5e8"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:29:56.266Z",
+    "kind": "rig",
+    "task_id": "5423f6ed-0420-4b71-a707-27fe801c3847",
+    "status": "failed",
+    "request": {
+      "input": "fa611bf6-75f5-4cfd-b34d-b0589848c5e8",
+      "model": "v1.0-20240301",
+      "rig_type": "quadruped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "error": "task 5423f6ed-0420-4b71-a707-27fe801c3847 failed: {\"type\":\"animate_rig\",\"status\":\"failed\",\"progress\":100,\"input\":{\"spec\":\"tripo\",\"topology\":\"quadruped\",\"out_format\":\"glb\",\"original_model_id\":\"fa611bf6-75f5-4cfd-b34d-b0589848c5e8\"},\"output\":{},\"task_id\":\"5423f6ed-0420-4b71-a707-27fe801c3847\",\"created_at\":\"2026-10-13T11:29:36.973197Z\",\"completed_at\":\"2026-10-13T11:29:53.661068Z\",\"error_code\":1004,\"error_message\":\"Invalid input parameter\"}"
+  },
+  {
+    "at": "2026-10-13T11:32:36.686Z",
+    "kind": "rigcheck",
+    "task_id": "5939ee99-f97e-40b3-9eed-be7a18f34d9a",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "fa611bf6-75f5-4cfd-b34d-b0589848c5e8"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:32:54.653Z",
+    "kind": "rig",
+    "task_id": "e7d15316-0a28-47e4-b1b0-c9eecd4ec956",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "fa611bf6-75f5-4cfd-b34d-b0589848c5e8",
+      "model": "v2.5-20260210",
+      "rig_type": "quadruped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:33:03.658Z",
+    "kind": "animate",
+    "task_id": "25bb4d56-290e-465a-8943-45ce7dfee433",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "e7d15316-0a28-47e4-b1b0-c9eecd4ec956",
+      "animation": "preset:quadruped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  }
+]

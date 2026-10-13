@@ -1,0 +1,95 @@
+[
+  {
+    "at": "2026-10-13T11:20:43.311Z",
+    "kind": "text",
+    "task_id": "d8235450-a0e5-4ca1-b0b7-5392e15424be",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D animal: a giant rat the size of a dog, mangy and diseased. Patchy greasy brown-grey fur, a long pink naked scaly tail, pink ears and paws, small red eyes, yellow front teeth. Hunched back. Standing still on all four legs in a neutral pose, legs straight and slightly apart, head forward, facing sideways, mouth closed. Realistic anatomy and proportions, not stylised, a creature for a dark-fantasy medieval game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, stylised, cute, big eyes, multiple animals, base, pedestal, platform, rock, ground, saddle, human"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:29:18.737Z",
+    "kind": "rigcheck",
+    "task_id": "2e43086e-2b5c-4718-8b1d-75250931e3a9",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "d8235450-a0e5-4ca1-b0b7-5392e15424be"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:29:32.139Z",
+    "kind": "rig",
+    "task_id": "a607d77a-bb59-4dc7-8024-8b4725508a2c",
+    "status": "failed",
+    "request": {
+      "input": "d8235450-a0e5-4ca1-b0b7-5392e15424be",
+      "model": "v1.0-20240301",
+      "rig_type": "quadruped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "error": "task a607d77a-bb59-4dc7-8024-8b4725508a2c failed: {\"type\":\"animate_rig\",\"status\":\"failed\",\"progress\":100,\"input\":{\"spec\":\"tripo\",\"topology\":\"quadruped\",\"out_format\":\"glb\",\"original_model_id\":\"d8235450-a0e5-4ca1-b0b7-5392e15424be\"},\"output\":{},\"task_id\":\"a607d77a-bb59-4dc7-8024-8b4725508a2c\",\"created_at\":\"2026-10-13T11:29:19.116335Z\",\"completed_at\":\"2026-10-13T11:29:29.506778Z\",\"error_code\":1004,\"error_message\":\"Invalid input parameter\"}"
+  },
+  {
+    "at": "2026-10-13T11:31:56.603Z",
+    "kind": "rigcheck",
+    "task_id": "8676d20b-e4f1-44b2-b6a8-d951b46a91a6",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "d8235450-a0e5-4ca1-b0b7-5392e15424be"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:32:20.178Z",
+    "kind": "rig",
+    "task_id": "9499f640-62bb-47d4-be01-41cceb74499d",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "d8235450-a0e5-4ca1-b0b7-5392e15424be",
+      "model": "v2.5-20260210",
+      "rig_type": "quadruped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:32:32.052Z",
+    "kind": "animate",
+    "task_id": "972751fc-4f24-4cf6-adec-c105ed7e95e9",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "9499f640-62bb-47d4-be01-41cceb74499d",
+      "animation": "preset:quadruped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  }
+]

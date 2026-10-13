@@ -21,6 +21,16 @@ function bakedDef(id, look) {
   return { id, look, baked: true, res: B.res, height: B.height, actions, alias, build: () => {}, portrait: null };
 }
 
+// Dialogue portraits show at 3 pixels per unit; older bakes at finer resolutions are thinned out.
+const PORTRAIT_RES = 3;
+function coarsePortrait(p) {
+  const k = Math.round(p.res / PORTRAIT_RES);
+  if (k <= 1) return p;
+  const w = Math.ceil(p.w / k), h = Math.ceil(p.h / k), data = new Uint16Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) data[y * w + x] = p.data[y * k * p.w + x * k];
+  return { w, h, ax: p.ax / k, ay: p.ay / k, res: p.res / k, data };
+}
+
 // Unpacks every baked villager into the sprite cache. Resolves once all are ready.
 async function loadBaked() {
   for (const [id, B] of Object.entries(BAKED)) {
@@ -36,18 +46,18 @@ async function loadBaked() {
       ActorSprites.pinned.set(ActorSprites.key(id, action, frame, rot), { w, h, ax, ay, res: B.res, data: take(w, h) });
     }
     const [w, h, ax, ay, res] = B.portrait;
-    ACTOR_DEFS()[id].portrait = { w, h, ax, ay, res, data: take(w, h) };
+    ACTOR_DEFS()[id].portrait = coarsePortrait({ w, h, ax, ay, res, data: take(w, h) });
     delete B.data; // the cache holds it now
   }
   if (BAKED_VM.data || BAKED_VM.parts) {
     const raw = await bakedData(BAKED_VM);
     let off = 0;
     BAKED_VM.sprites = {};
-    for (const [kind, id, set, frame, w, h, x0, y0] of BAKED_VM.index) {
+    for (const [id, frame, w, h, x0, y0] of BAKED_VM.index) {
       const data = new Uint16Array(w * h);
       for (let i = 0; i < w * h; i++) { const v = raw[off + i]; data[i] = v ? v : 0xFFFF; }
       off += w * h;
-      BAKED_VM.sprites[`${kind}:${id}:${set}:${frame}`] = { w, h, x0, y0, data };
+      BAKED_VM.sprites[`${id}:${frame}`] = { w, h, x0, y0, data };
     }
     delete BAKED_VM.data;
     if (typeof _vmCache !== 'undefined') _vmCache.clear(); // drop any sculpted stand-ins

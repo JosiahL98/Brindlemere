@@ -81,7 +81,7 @@ const UI = {
     this.talkId = id;
     const port = $('#dlg-portrait');
     port.innerHTML = '';
-    port.appendChild(spriteCanvas(renderPortrait(ACTOR_DEFS()[id], 6), 'portrait'));
+    port.appendChild(spriteCanvas(renderPortrait(ACTOR_DEFS()[id], PORTRAIT_RES), 'portrait'));
     $('#dlg-name').textContent = C.name;
     $('#dlg-title').textContent = C.title;
     this.dlgShow({ text: dlgGreeting(id) });

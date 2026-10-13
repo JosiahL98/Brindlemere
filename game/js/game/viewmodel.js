@@ -1,6 +1,8 @@
 'use strict';
 // The first-person weapon: a sleeved arm swinging whatever is equipped, drawn in screen space
-// like Arena's. Frames: 0 ready, 1 wind-up, 2 strike, 3 follow-through, 4 recover.
+// like Arena's. Baked from Tripo models posed by a real arm (tools/bake-viewmodel.js); the
+// sculpted version below stands in until they load, with frames 0 ready, 1 wind-up, 2 strike,
+// 3 follow-through, 4 recover.
 
 const VM_FRAMES = [
   // wrist [x, y], elbow [x, y], weapon angle (degrees, 0 = pointing right)
@@ -35,45 +37,30 @@ function layerSprites(back, bx, by, front) {
   put(front, -x0, -y0);
   return { w, h, ax: front.ax - x0, ay: front.ay - y0, res: front.res, data };
 }
-// Which baked weapon model each item uses.
-const VM_BAKED_WEAPON = { wood_club: 'club', iron_dagger: 'dagger', rusty_dagger: 'rusty_dagger', fishing_knife: 'knife', smith_hammer: 'hammer',
-  iron_sword: 'sword', bram_sword: 'bram_sword', steel_longsword: 'longsword', iron_axe: 'axe', iron_mace: 'mace' };
-// The linen sleeve bakes to the STONE ramp (skin uses FLESH, RUST and BROWN); tunics recolour
-// it to their own ramp, shade for shade.
-const VM_SLEEVE_RAMPS = ['STONE', 'GRAY'];
+// Which baked arm-and-weapon model each item uses (tools/bake-viewmodel.js).
+const VM_BAKED_WEAPON = { fists: 'empty', wood_club: 'club', iron_dagger: 'dagger', rusty_dagger: 'rusty_dagger', fishing_knife: 'knife', smith_hammer: 'hammer',
+  iron_sword: 'sword', bram_sword: 'sword', steel_longsword: 'sword', iron_axe: 'axe', iron_mace: 'mace' };
+// The linen sleeve bakes to the STONE ramp, which nothing else in these sprites uses; it takes
+// the colour of the tunic worn, shade for shade, or turns to riveted rings under a mail shirt.
 const VM_SLEEVE_SHIFT = { OLIVE: -1, BONE: 1, BROWN: -3, RUST: -2 };
 function bakedViewmodelFrames(weaponId, bodyId) {
   const S = BAKED_VM.sprites, body = bodyId ? ITEMS[bodyId] : null;
-  const armId = body && body.model === 'mail' ? 'mail' : 'cloth';
-  const tint = armId === 'cloth' ? (body ? body.tint || 'BONE' : 'OLIVE') : null;
-  const recolor = new Uint16Array(256).map((_, i) => i);
-  if (tint) for (const src of VM_SLEEVE_RAMPS) for (let l = 0; l < 16; l++) recolor[R[src] + l] = R[tint] + clamp(l + (VM_SLEEVE_SHIFT[tint] || 0), 0, 15);
-  const wid = VM_BAKED_WEAPON[weaponId], set = wid ? 'swing' : 'fist';
+  const id = VM_BAKED_WEAPON[weaponId] || VM_BAKED_WEAPON.fists;
+  if (!S[`${id}:0`]) return null;
+  const mail = body && body.model === 'mail', tint = mail ? 'STEEL' : body ? body.tint || 'BONE' : 'OLIVE';
+  const stone = R.STONE, shift = mail ? -5 : VM_SLEEVE_SHIFT[tint] || 0;
   const frames = [];
-  // Modelled with the weapon already in hand: one sprite per frame, sleeve recoloured.
-  const fusedId = wid || 'empty';
-  if (armId === 'cloth' && S[`fused:${fusedId}:${set}:0`]) {
-    for (let f = 0; f < 5; f++) {
-      const s = S[`fused:${fusedId}:${set}:${f}`];
-      const data = s.data.map((v) => (v === 0xFFFF ? v : recolor[v]));
-      frames.push({ w: s.w, h: s.h, ax: VM_ANCHOR_X - s.x0, ay: VM_ANCHOR_Y - s.y0, res: 1, data });
-    }
-    return frames;
+  for (let f = 0; S[`${id}:${f}`]; f++) {
+    const s = S[`${id}:${f}`];
+    const data = s.data.map((v, i) => {
+      if (v === 0xFFFF || (v & 0xF0) !== stone) return v;
+      // Mail: a little checker of light and dark rings.
+      const ring = mail ? ((((s.x0 + i % s.w) >> 1) + ((s.y0 + Math.floor(i / s.w)) >> 1)) & 1 ? 2 : -1) : 0;
+      return R[tint] + clamp((v & 0xF) + shift + ring, 0, 15);
+    });
+    frames.push({ w: s.w, h: s.h, ax: VM_ANCHOR_X - s.x0, ay: VM_ANCHOR_Y - s.y0, res: 1, data });
   }
-  for (let f = 0; f < 5; f++) {
-    const arm = S[`arm:${armId}:${set}:${f}`], weapon = wid && S[`weapon:${wid}:swing:${f}`];
-    if (!arm || (wid && !weapon)) return null;
-    // Weapon first, then the arm over it, both already at their screen positions.
-    const layers = weapon ? [[weapon, null], [arm, recolor]] : [[arm, recolor]];
-    const X0 = Math.min(...layers.map(([s]) => s.x0)), Y0 = Math.min(...layers.map(([s]) => s.y0));
-    const w = Math.max(...layers.map(([s]) => s.x0 + s.w)) - X0, h = Math.max(...layers.map(([s]) => s.y0 + s.h)) - Y0;
-    const data = new Uint16Array(w * h).fill(0xFFFF);
-    for (const [s, map] of layers) for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
-      const v = s.data[y * s.w + x];
-      if (v !== 0xFFFF) data[(s.y0 - Y0 + y) * w + s.x0 - X0 + x] = map ? map[v] : v;
-    }
-    frames.push({ w, h, ax: VM_ANCHOR_X - X0, ay: VM_ANCHOR_Y - Y0, res: 1, data });
-  }
+  frames.phases = BAKED_VM.phases[BAKED_VM.moves[id]];
   return frames;
 }
 const VM_ANCHOR_X = 222, VM_ANCHOR_Y = 178; // drawViewmodel's anchor; baked sprites are in screen space
@@ -131,14 +118,18 @@ function viewmodelFrames(weaponId, bodyId) {
   _vmCache.set(key, frames);
   return frames;
 }
-// Which frame to show for the swing progress (0..1+), or 0 when idle.
-function viewmodelFrame(swing) {
+// Which frame to show for the swing progress (0..1.15), or 0 when idle. Baked arms carry the
+// swing phase each frame was posed at; the sculpted stand-in has five frames.
+function viewmodelFrame(swing, frames) {
   if (!swing) return 0;
-  const t = swing.t / swing.dur;
-  return t < 0.22 ? 1 : t < 0.5 ? 2 : t < 0.8 ? 3 : 4;
+  const t = swing.t / swing.dur, P = frames.phases;
+  if (!P) return t < 0.22 ? 1 : t < 0.5 ? 2 : t < 0.8 ? 3 : 4;
+  let f = 1;
+  while (f < P.length - 1 && P[f + 1] <= t + 0.03) f++;
+  return f;
 }
 function drawViewmodel(frames, swing, bobT, moving, lvl, cmaps) {
-  const f = viewmodelFrame(swing);
+  const f = viewmodelFrame(swing, frames);
   const spr = frames[f];
   const bobX = Math.sin(bobT) * 5 * Math.min(1, moving / 140), bobY = Math.abs(Math.cos(bobT)) * 4 * Math.min(1, moving / 140);
   // Anchor the sprite's world origin a little right of centre, near the bottom of the screen.

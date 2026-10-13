@@ -144,5 +144,110 @@
     "bytes": 1440437,
     "credits": null,
     "seconds_taken": 12
+  },
+  {
+    "at": "2026-10-13T11:21:20.020Z",
+    "name": "title",
+    "status": "success",
+    "request": {
+      "prompt": "Title screen theme for a dark fantasy adventure: a slow, grand and ominous melody on a bright square-wave lead over a deep synth bass and steady arpeggios, minor key, heroic yet melancholic. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 0,
+    "seconds_taken": 16
+  },
+  {
+    "at": "2026-10-13T11:21:39.802Z",
+    "name": "town",
+    "status": "success",
+    "request": {
+      "prompt": "Daytime village theme: a gentle, wistful folk melody on a plucky synth lead with bouncy arpeggios and a light drum beat, dorian mode, peaceful but a little melancholic. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 3000,
+    "seconds_taken": 18
+  },
+  {
+    "at": "2026-10-13T11:21:56.911Z",
+    "name": "night",
+    "status": "success",
+    "request": {
+      "prompt": "Night-time village theme: slow, quiet and mysterious, a soft triangle-wave melody over sparse arpeggios and a low drone, minor key, sleepy and eerie. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 0,
+    "seconds_taken": 16
+  },
+  {
+    "at": "2026-10-13T11:22:18.442Z",
+    "name": "wild",
+    "status": "success",
+    "request": {
+      "prompt": "Wilderness exploration theme: an adventurous melody on a synth lead over a pulsing arpeggiated bass and a marching drum beat, minor key, a sense of danger in the wild hills. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 0,
+    "seconds_taken": 20
+  },
+  {
+    "at": "2026-10-13T11:23:00.301Z",
+    "name": "cellar",
+    "status": "success",
+    "request": {
+      "prompt": "Dungeon cellar theme: dark, creepy and tense, a slow chromatic synth bassline, eerie high arpeggios and echoing drips, minor key. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 4500,
+    "seconds_taken": 40
+  },
+  {
+    "at": "2026-10-13T11:23:15.819Z",
+    "name": "chapel",
+    "status": "success",
+    "request": {
+      "prompt": "Village chapel theme: solemn and sacred, a slow hymn-like melody on a synth organ with soft choir-like synth pads, minor key, reverent and sad. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 120000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1440437,
+    "credits": 0,
+    "seconds_taken": 14
+  },
+  {
+    "at": "2026-10-13T11:23:45.215Z",
+    "name": "combat",
+    "status": "success",
+    "request": {
+      "prompt": "Battle theme: fast, urgent and aggressive, a driving synth bass arpeggio, a fierce square-wave lead melody and pounding drums, minor key. Retro arcade-style fantasy game music: crisp early-1990s sound-chip synthesizers, FM synth and square-wave leads, simple memorable melodies over arpeggios and a punchy drum machine, like the soundtrack of an old arcade or computer fantasy RPG, with a dark dungeon synth mood. Instrumental, no vocals, no lyrics.",
+      "music_length_ms": 90000,
+      "model_id": "music_v1",
+      "force_instrumental": true
+    },
+    "format": "mp3_44100_96",
+    "bytes": 1080574,
+    "credits": 2625,
+    "seconds_taken": 28
   }
 ]

@@ -31,7 +31,7 @@ const cfg = {
     return { id, clip, frames: +frames, cycle: flag === 'cycle', once: flag === 'once', speed: +speed || 1 };
   }),
   // Head and shoulders for the dialogue panel, framed like renderPortrait().
-  portrait: { res: 6, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },
+  portrait: { res: 3, yaw: 0.22, pitchDeg: 2, halfWidth: 13, below: 12.5, above: 9 },
   light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.72, dither: 9 },
   debugRaw: args.includes('--raw'),
 };

@@ -2,8 +2,9 @@
 // Files land in assets/tripo/<name>/ with a tasks.json log of every task and its cost.
 //   node tools/tripo.js balance
 //   node tools/tripo.js text <name> "<prompt>" [--neg "<negative prompt>"] [--seed N]
-//   node tools/tripo.js rig <name>                       rigs the latest model for <name>
-//   node tools/tripo.js animate <name> idle walk ...     preset animations on the rig
+//   node tools/tripo.js rig <name> [--type quadruped] [--model v]  rigs the latest model (type from the rig check)
+//   node tools/tripo.js animate <name> idle walk ...     preset animations on the rig; a bare name is a
+//                                                        biped preset, quadruped:walk etc. are used as given
 //   node tools/tripo.js task <task_id>                   raw task status
 // The API key comes from TRIPO_API_KEY (or, on Windows, the user environment in the registry).
 'use strict';
@@ -111,17 +112,21 @@ async function main() {
   if (cmd === 'rig') {
     const src = latest(name, 'text');
     if (!src) throw new Error(`no finished model for ${name}`);
+    const type = opt('--type'), model = opt('--model');
     const check = await run(name, 'rigcheck', '/animations/rig-check', { input: src.task_id }, () => ({}));
     console.log('  rig check:', JSON.stringify(check.output));
-    await run(name, 'rig', '/animations/rig', { input: src.task_id, model: 'v1.0-20240301', rig_type: 'biped', spec: 'tripo', out_format: 'glb' }, (o) => ({ [o.model_url]: 'rigged.glb' }));
+    const rigType = type || (check.output && check.output.rig_type) || 'biped';
+    // v1.0 rigs bipeds only; v2.5 also does animals (quadruped, hexapod, octopod, ...).
+    await run(name, 'rig', '/animations/rig', { input: src.task_id, model: model || (rigType === 'biped' ? 'v1.0-20240301' : 'v2.5-20260210'), rig_type: rigType, spec: 'tripo', out_format: 'glb' }, (o) => ({ [o.model_url]: 'rigged.glb' }));
     return;
   }
   if (cmd === 'animate') {
     const src = latest(name, 'rig');
     if (!src) throw new Error(`no rig for ${name}`);
     for (const a of rest) {
-      await run(name, 'animate', '/animations/retarget', { input: src.task_id, animation: `preset:biped:${a}`, out_format: 'glb', bake_animation: true, export_with_geometry: true, animate_in_place: true },
-        (o) => ({ [o.model_url || (o.model_urls && Object.values(o.model_urls)[0])]: `anim-${a}.glb` }));
+      const preset = a.includes(':') ? a : `biped:${a}`, file = a.includes(':') ? a.split(':').pop() : a;
+      await run(name, 'animate', '/animations/retarget', { input: src.task_id, animation: `preset:${preset}`, out_format: 'glb', bake_animation: true, export_with_geometry: true, animate_in_place: true },
+        (o) => ({ [o.model_url || (o.model_urls && Object.values(o.model_urls)[0])]: `anim-${file}.glb` }));
     }
     return;
   }

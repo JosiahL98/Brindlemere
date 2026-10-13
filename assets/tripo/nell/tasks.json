@@ -1,0 +1,124 @@
+[
+  {
+    "at": "2026-10-13T11:19:40.306Z",
+    "kind": "text",
+    "task_id": "95b0338c-9c21-4568-9e41-9588be3597b8",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D character: a fisherwoman in her thirties. Black hair in a long braid under a rust-red kerchief, dark brown skin, brown eyes, a confident face. A blue wool tunic with rolled sleeves, a leather apron, brown trousers tucked into tall leather boots. She holds a short gutting knife in her right hand. Realistic adult proportions, standing upright in an A-pose with the arms angled slightly away from the body, facing forward, neutral expression. Realistic medieval fantasy villager in a dark-fantasy farming town, not stylised.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, big head, stylised proportions, multiple people, base, pedestal, platform"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:15.499Z",
+    "kind": "rigcheck",
+    "task_id": "3c7823b4-fc66-4fbe-a0d3-9ff4c4104957",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "95b0338c-9c21-4568-9e41-9588be3597b8"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:28:23.623Z",
+    "kind": "rig",
+    "task_id": "a4102d36-1045-495a-8362-07edd37dfbb8",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "95b0338c-9c21-4568-9e41-9588be3597b8",
+      "model": "v1.0-20240301",
+      "rig_type": "biped",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:33.072Z",
+    "kind": "animate",
+    "task_id": "4727b845-d279-442e-8a60-4c081665f5b8",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a4102d36-1045-495a-8362-07edd37dfbb8",
+      "animation": "preset:biped:idle",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-idle.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:41.444Z",
+    "kind": "animate",
+    "task_id": "01ccfa21-541d-4b9b-abb3-3a34059a1589",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a4102d36-1045-495a-8362-07edd37dfbb8",
+      "animation": "preset:biped:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:47.171Z",
+    "kind": "animate",
+    "task_id": "0cf38337-422d-4b5b-9762-de84b22ac436",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a4102d36-1045-495a-8362-07edd37dfbb8",
+      "animation": "preset:biped:agree",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-agree.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:28:55.821Z",
+    "kind": "animate",
+    "task_id": "7e67252b-cdad-4007-b16a-d066aa0fac37",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "a4102d36-1045-495a-8362-07edd37dfbb8",
+      "animation": "preset:biped:slash",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-slash.glb"
+    ]
+  }
+]

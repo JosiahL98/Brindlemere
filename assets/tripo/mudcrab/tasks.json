@@ -1,0 +1,95 @@
+[
+  {
+    "at": "2026-10-13T11:20:32.870Z",
+    "kind": "text",
+    "task_id": "22560451-db30-4cf0-9cc9-8c2157f4ac40",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "Full-body 3D animal: a giant mud crab as big as a dog. A broad, rough, muddy olive-brown shell flecked with dark spots, two large heavy pincer claws held up in front, eight jointed walking legs splayed out to the sides, small black eyes on short stalks. Standing still on its legs in a neutral pose, body raised off the ground. Realistic anatomy, not stylised, a creature for a dark-fantasy medieval game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "cartoon, chibi, anime, stylised, cute, big eyes, multiple animals, base, pedestal, platform, rock, ground, sand, food, cooked, plate"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:30:00.909Z",
+    "kind": "rigcheck",
+    "task_id": "b5748702-77b9-4e9d-a56b-e7f479433f83",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "22560451-db30-4cf0-9cc9-8c2157f4ac40"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:30:14.309Z",
+    "kind": "rig",
+    "task_id": "f45b5f77-5d5e-4867-acbc-84752c68a38d",
+    "status": "failed",
+    "request": {
+      "input": "22560451-db30-4cf0-9cc9-8c2157f4ac40",
+      "model": "v1.0-20240301",
+      "rig_type": "octopod",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "error": "task f45b5f77-5d5e-4867-acbc-84752c68a38d failed: {\"type\":\"animate_rig\",\"status\":\"failed\",\"progress\":100,\"input\":{\"spec\":\"tripo\",\"topology\":\"octopod\",\"out_format\":\"glb\",\"original_model_id\":\"22560451-db30-4cf0-9cc9-8c2157f4ac40\"},\"output\":{},\"task_id\":\"f45b5f77-5d5e-4867-acbc-84752c68a38d\",\"created_at\":\"2026-10-13T11:30:01.280343Z\",\"completed_at\":\"2026-10-13T11:30:13.066122Z\",\"error_code\":1004,\"error_message\":\"Invalid input parameter\"}"
+  },
+  {
+    "at": "2026-10-13T11:33:08.488Z",
+    "kind": "rigcheck",
+    "task_id": "9b106106-fccb-49e4-a6e3-37e74faa2804",
+    "status": "success",
+    "credits": 0,
+    "request": {
+      "input": "22560451-db30-4cf0-9cc9-8c2157f4ac40"
+    },
+    "files": []
+  },
+  {
+    "at": "2026-10-13T11:33:25.887Z",
+    "kind": "rig",
+    "task_id": "dcec0170-0dce-4e75-8667-dcbdd236677f",
+    "status": "success",
+    "credits": 25,
+    "request": {
+      "input": "22560451-db30-4cf0-9cc9-8c2157f4ac40",
+      "model": "v2.5-20260210",
+      "rig_type": "octopod",
+      "spec": "tripo",
+      "out_format": "glb"
+    },
+    "files": [
+      "rigged.glb"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:33:35.008Z",
+    "kind": "animate",
+    "task_id": "74eafffc-82fd-4c65-91f2-6d066b6783b8",
+    "status": "success",
+    "credits": 10,
+    "request": {
+      "input": "dcec0170-0dce-4e75-8667-dcbdd236677f",
+      "animation": "preset:octopod:walk",
+      "out_format": "glb",
+      "bake_animation": true,
+      "export_with_geometry": true,
+      "animate_in_place": true
+    },
+    "files": [
+      "anim-walk.glb"
+    ]
+  }
+]

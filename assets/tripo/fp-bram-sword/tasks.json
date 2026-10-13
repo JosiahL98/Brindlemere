@@ -1,0 +1,68 @@
+[
+  {
+    "at": "2026-10-13T11:30:11.979Z",
+    "kind": "text",
+    "task_id": "5b5dade2-5be5-406b-8d16-e25eb15e6031",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand held upright, gripping the weapon in a firm natural grip, all four fingers wrapped around the grip and the thumb wrapped over them. The weapon is an old adventurer's arming sword, the straight steel blade notched and scratched from years of use, rising straight up out of the top of the fist above the thumb, a worn brass crossguard and brass pommel, a dark leather grip. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and weapon only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal, horizontal weapon, sheath"
+    },
+    "files": [
+      "model-1.glb",
+      "preview-1.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:36:05.712Z",
+    "kind": "text",
+    "task_id": "7cf6adaf-b8c7-4cfb-8fdf-46e6d73a7aad",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm and hand held upright, gripping a one-handed sword in a firm natural grip, all four fingers wrapped around the grip and the thumb wrapped over them. The sword is an old adventurer's arming sword with a LONG straight steel blade, as long as the whole forearm, notched and scratched from years of use, tapering to a point, rising straight up out of the top of the fist above the thumb, fully visible. A worn brass crossguard and brass pommel, a dark leather grip. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Isolated forearm, hand and sword only, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal, horizontal sword, sheath, short blade, broken blade, dagger, knife"
+    },
+    "files": [
+      "model-2.glb",
+      "preview-2.webp"
+    ]
+  },
+  {
+    "at": "2026-10-13T11:43:07.475Z",
+    "kind": "text",
+    "task_id": "3ccd3bd5-85a2-4c5a-93d4-20579850d17c",
+    "status": "success",
+    "credits": 20,
+    "request": {
+      "prompt": "A single human RIGHT forearm held upright with the hand at the top, the fist gripping the hilt of an old sword, all four fingers wrapped around the grip and the thumb over them. The sword points straight UP out of the top of the fist: a long straight steel blade, three times the length of the hand, notched and scratched, ending in a point at the very top. A worn brass crossguard rests on top of the fist and a brass pommel sits just below the little finger. The forearm is covered to the wrist by a loose, rough, undyed off-white linen sleeve with folds and a frayed cuff, cut off cleanly a little below the elbow; the hand is bare, fair weathered skin with visible knuckles. Exactly one forearm and one hand, isolated, realistic, not stylised, game asset for a first-person fantasy game.",
+      "model": "v3.1-20260211",
+      "texture": true,
+      "pbr": false,
+      "texture_quality": "standard",
+      "face_limit": 60000,
+      "texture_version": "v3.5-20260815",
+      "delight": true,
+      "negative_prompt": "full body, person, head, torso, shoulder, upper arm, two arms, two hands, extra hand, left hand, cartoon, stylised, robot, glove, armour, stand, base, pedestal, horizontal sword, sheath, short blade, broken blade, reverse grip, blade pointing down"
+    },
+    "files": [
+      "model-3.glb",
+      "preview-3.webp"
+    ]
+  }
+]

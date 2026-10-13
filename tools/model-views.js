@@ -10,6 +10,8 @@ const { root, inBakePage, png } = require('./bake/common');
 const args = process.argv.slice(2);
 const oi = args.indexOf('--out');
 const out = oi >= 0 ? args.splice(oi, 2)[1] : path.join(root, 'tools', 'out', 'views.png');
+const pi = args.indexOf('--points');
+const marks = pi >= 0 ? JSON.parse(args.splice(pi, 2)[1]) : []; // [[x, y, z], ...] drawn as coloured dots
 const model = args[0];
 (async () => {
   const PX = 500; // pixels per model unit
@@ -33,6 +35,13 @@ const model = args[0];
       if (major(mu) || major(mv)) img.set([230, 80, 80, 255], o);
       else if (near(mu) || near(mv)) img.set([120, 120, 150, 255], o);
     }
+    const dotCols = [[255, 60, 60], [60, 255, 60], [80, 140, 255], [255, 255, 0]];
+    marks.forEach((m, n) => {
+      const mu = m[ax[v.uAxis]], mv = m[ax[v.vAxis]];
+      const x = Math.round(v.name === 'side' ? (u1 - mu) / (u1 - u0) * v.W : (mu - u0) / (u1 - u0) * v.W);
+      const y = Math.round(v.name === 'top' ? (mv - v0) / (v1 - v0) * v.H : (v1 - mv) / (v1 - v0) * v.H);
+      for (let dy = -4; dy <= 4; dy++) for (let dx = -4; dx <= 4; dx++) if (x + dx >= 0 && x + dx < v.W && y + dy >= 0 && y + dy < H) img.set([...dotCols[n % 4], 255], ((y + dy) * W + ox + x + dx) * 4);
+    });
     console.log(`${v.name}: x ${ox}..${ox + v.W} px; right = ${v.name === 'side' ? '-' : '+'}${v.uAxis} from ${(v.name === 'side' ? u1 : u0).toFixed(3)}, ${v.name === 'top' ? 'down = +z from ' + v0.toFixed(3) : 'up = +y from ' + v0.toFixed(3) + ' (bottom)'}; red lines every 0.25, grey every 0.05`);
     ox += v.W + gap;
   }

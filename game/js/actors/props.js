@@ -1,5 +1,5 @@
 'use strict';
-// Static props, sculpted like the creatures and rendered once as billboards.
+// Static props, sculpted like the creatures and built once as solid voxel models (voxel.js).
 // Each prop: { variants, build(s, variant, frame, night), collide (radius), frames, nightVariant }
 
 const PROPS = {};
@@ -434,7 +434,8 @@ defProp('table', {
 defProp('stool', {
   collide: 6,
   build(s) {
-    s.limb(at(0, 15, 0), at(0, 17, 0), 5.5, 5.5, PM.plank);
+    // A flat round seat on three splayed legs.
+    s.cylinder(F(0, 16, 0), 5.8, 1.1, 0.5, PM.plank);
     for (let i = 0; i < 3; i++) { const a = i * TAU / 3; s.limb(at(Math.cos(a) * 3, 15, Math.sin(a) * 3), at(Math.cos(a) * 5, 0, Math.sin(a) * 5), 0.8, 0.8, PM.woodDark); }
   },
 });
@@ -539,15 +540,50 @@ function propSprite(type, variant, frame, night, rot = 0) {
 }
 function pumpProps(ms) {
   const t0 = performance.now();
+  // Voxel models first, nearest first.
+  while (_voxJobs.size && performance.now() - t0 < ms) {
+    let best = null;
+    for (const [key, j] of _voxJobs) if (!best || j.d < best[1].d) best = [key, j];
+    const [key, j] = best;
+    for (;;) {
+      const r = j.gen.next();
+      if (r.done) { _voxCache.set(key, r.value); _voxJobs.delete(key); break; }
+      if (performance.now() - t0 > ms) break;
+    }
+  }
   for (const [key, args] of _propQueue) {
     if (performance.now() - t0 > ms) break;
     _propQueue.delete(key);
     if (!_propCache.has(key)) _propCache.set(key, renderProp(...args));
   }
 }
+// Every prop becomes a solid voxel model (voxel.js) once it has been built in idle time; until
+// then it shows as a card. d: how far away it is, so the nearest are built first.
+const _voxCache = new Map(), _voxJobs = new Map();
+function propVoxels(type, v, f, n, d) {
+  const key = `${type}|${v}|${f}|${n}`;
+  const M = _voxCache.get(key);
+  if (M !== undefined) return M;
+  const j = _voxJobs.get(key);
+  if (j) { if (d < j.d) j.d = d; return null; }
+  const P = PROPS[type], s = new Shape();
+  P.build(s, v, f, !!n);
+  _voxJobs.set(key, { gen: voxelJob(s, { size: P.voxel || 1 }), d });
+  return null;
+}
+// Queues every prop model a map needs (on loading it, behind the fade).
+function warmProps(map, night) {
+  for (const p of map.props) {
+    const P = PROPS[p.type];
+    if (!P || p.taken) continue;
+    for (let f = 0; f < P.frames; f++) propVoxels(p.type, Math.min(propVariant(p), P.variants - 1), f, P.nightVariant && night ? 1 : 0, 1e6);
+  }
+}
 // Which way a prop faces: away from a wall it stands against, otherwise a fixed random way.
+// Round things (trees, rocks, barrels) just get any angle, so no two look quite alike.
 function propFacing(map, p) {
   if (p.ang !== undefined) return p.ang;
+  if (!TURNING_PROPS.has(p.type)) return (p.ang = hash3(Math.floor(p.x), Math.floor(p.z), 11) * TAU);
   const tx = Math.floor(p.x / TILE), tz = Math.floor(p.z / TILE);
   const open = [[1, 0, 0], [0, 1, Math.PI / 2], [-1, 0, Math.PI], [0, -1, -Math.PI / 2]].filter(([dx, dz]) => !map.wallAt(tx + dx, tz + dz));
   if (open.length && open.length < 4) {
@@ -568,14 +604,20 @@ function gatherPropSprites(map, t = 0, night = 0, camX, camZ) {
     if (p.taken) continue;
     const P = PROPS[p.type];
     if (!P) continue;
+    const v = Math.min(propVariant(p), P.variants - 1), f = Math.floor(t * 6) % P.frames, n = P.nightVariant && night > 0.45 ? 1 : 0;
+    const facing = propFacing(map, p);
+    if (camX !== undefined) {
+      const vox = propVoxels(p.type, v, f, n, Math.hypot(camX - p.x, camZ - p.z));
+      if (vox) { out.push({ vox, x: p.x, z: p.z, ang: facing, prop: p }); continue; }
+    }
     let rot = 0, face;
     if (camX !== undefined && TURNING_PROPS.has(p.type)) {
-      const facing = propFacing(map, p), d = Math.atan2(camZ - p.z, camX - p.x) - facing;
+      const d = Math.atan2(camZ - p.z, camX - p.x) - facing;
       const k = Math.round(Math.atan2(Math.sin(d), Math.cos(d)) / PROP_STEP);
       rot = ((k % PROP_ROTS) + PROP_ROTS) % PROP_ROTS;
       face = facing + k * PROP_STEP; // the way this view looks at the prop from: the card's fixed orientation
     }
-    out.push({ spr: propSprite(p.type, propVariant(p), Math.floor(t * 6), night > 0.45, rot), x: p.x, z: p.z, prop: p, face });
+    out.push({ spr: propSprite(p.type, v, f, n, rot), x: p.x, z: p.z, prop: p, face });
   }
   return out;
 }

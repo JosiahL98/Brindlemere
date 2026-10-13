@@ -90,6 +90,9 @@
     for (const e of byDist) if (e.kind === 'enemy') ActorSprites.prefetch(e.defId, ['attack', 'pain', 'death']);
     for (const e of byDist) if (e.kind === 'npc') ActorSprites.prefetch(e.defId, ['talk']);
     for (const e of byDist) if (e.kind === 'npc' && CAST[e.id].fights) ActorSprites.prefetch(e.defId, ['attack']);
+    // Prop models: queue the whole map's, and build the nearest now, behind the fade.
+    warmProps(map, map.outdoor && outdoorEnv(hourOf()).night > 0.45);
+    pumpProps(250);
   }
   function useDoor(door) {
     if (door.locked) { notify(door.locked, 'item'); sfx('deny'); return; }
@@ -362,7 +365,7 @@
     }
     present();
     ActorSprites.pump(mode === 'play' && !UI.isOpen() ? 5 : 10);
-    pumpProps(2);
+    pumpProps(mode === 'title' ? 8 : 3);
   }
   function drawParticles(cam, env) {
     for (const p of particles) {

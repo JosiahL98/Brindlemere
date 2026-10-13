@@ -271,12 +271,113 @@ function renderWorld(map, cam, env, sprites, t) {
     }
   }
 
+  // ---- Voxel props ----
+  // Solid models in the world (voxel.js). Each pixel's ray is taken into the model's own grid
+  // and walked voxel by voxel (DDA) to the first filled one, jumping across empty space by the
+  // grid's distance field. Depth tested against the walls and each other.
+  // Nearest first, so the depth buffer turns away most of what lies behind.
+  const voxList = [];
+  for (const s of sprites) if (s.vox) voxList.push(s);
+  for (const s of voxList) s.hd = Math.hypot(s.x - cx, s.z - cz);
+  voxList.sort((a, b) => a.hd - b.hd);
+  const vc = new Float64Array(24);
+  for (const s of voxList) {
+    const M = s.vox;
+    if (s.hd > tMax + 100) continue;
+    const S = M.S, NX = M.nx, NY = M.ny, NZ = M.nz, data = M.data, dist = M.dist;
+    const sf = Math.sin(s.ang), cf = Math.cos(s.ang), by = s.y || 0;
+    // The model's x axis lies along (sf, -cf) in the world and its z axis (its front) along (cf, sf).
+    const hx = cx - s.x, hz = cz - s.z, hd = s.hd;
+    const ox = ((hx * sf - hz * cf) - M.ox) / S, oy = (eye - by - M.oy) / S, oz = ((hx * cf + hz * sf) - M.oz) / S;
+    // Screen rectangle of the grid's box: its corners in view space, and where its edges cross
+    // the near plane when it reaches behind the camera.
+    let minX = 1e9, maxX = -1e9, minY = 1e9, maxY = -1e9, ahead = false, near = 1e9;
+    for (let c = 0; c < 8; c++) {
+      const lx = M.ox + (c & 1 ? NX * S : 0), ly = M.oy + (c & 2 ? NY * S : 0), lz = M.oz + (c & 4 ? NZ * S : 0);
+      const px = s.x + lx * sf + lz * cf - cx, py = by + ly - eye, pz = s.z - lx * cf + lz * sf - cz;
+      vc[c * 3] = px * rX + pz * rZ; vc[c * 3 + 1] = px * uX + py * uY + pz * uZ; vc[c * 3 + 2] = px * fX + py * fY + pz * fZ;
+      if (vc[c * 3 + 2] >= 1) ahead = true;
+      if (vc[c * 3 + 2] < near) near = vc[c * 3 + 2];
+    }
+    if (!ahead) continue;
+    for (let c = 0; c < 8; c++) {
+      const ca = c * 3;
+      if (vc[ca + 2] >= 1) {
+        const sx = VW / 2 + vc[ca] * VF / vc[ca + 2], sy = VH / 2 - vc[ca + 1] * VF / vc[ca + 2];
+        if (sx < minX) minX = sx; if (sx > maxX) maxX = sx; if (sy < minY) minY = sy; if (sy > maxY) maxY = sy;
+        continue;
+      }
+      for (const bit of [1, 2, 4]) {
+        const cb = (c ^ bit) * 3;
+        if (vc[cb + 2] < 1) continue;
+        const k = (1 - vc[ca + 2]) / (vc[cb + 2] - vc[ca + 2]);
+        const sx = VW / 2 + (vc[ca] + (vc[cb] - vc[ca]) * k) * VF, sy = VH / 2 - (vc[ca + 1] + (vc[cb + 1] - vc[ca + 1]) * k) * VF;
+        if (sx < minX) minX = sx; if (sx > maxX) maxX = sx; if (sy < minY) minY = sy; if (sy > maxY) maxY = sy;
+      }
+    }
+    if (maxX < 0 || minX > VW || maxY < 0 || minY > VH) continue;
+    const x0 = Math.max(0, Math.floor(minX)), x1 = Math.min(VW, Math.ceil(maxX)), y0 = Math.max(0, Math.floor(minY)), y1 = Math.min(VH, Math.ceil(maxY));
+    const tx = Math.floor(s.x / TILE), tz = Math.floor(s.z / TILE);
+    const lm = tx >= 0 && tz >= 0 && tx < MW && tz < MH ? lightmap[tz * MW + tx] + nightmap[tz * MW + tx] * night : 0;
+    const off = clamp(Math.round(base + hd * fogK - 1 - lm - (s.bright || 0)), 0, 31) * 256;
+    // Along a row the ray is linear in kx; in grid units D = (ax + bx kx, dy / S, az + bz kx).
+    const axR = (rX * sf - rZ * cf) / S, azR = (rX * cf + rZ * sf) / S;
+    for (let y = y0; y < y1; y++) {
+      const ky = (VH / 2 - y - 0.5) / VF;
+      const bX = fX + uX * ky, dy = fY + uY * ky, bZ = fZ + uZ * ky;
+      const ax0 = (bX * sf - bZ * cf) / S, az0 = (bX * cf + bZ * sf) / S, Dy = dy / S;
+      const row = y * VW;
+      for (let x = x0; x < x1; x++) {
+        if (zb[row + x] <= near) continue; // something nearer than the whole box
+        const kx = (x + 0.5 - VW / 2) / VF;
+        const Dx = ax0 + axR * kx, Dz = az0 + azR * kx;
+        // Slab test against the grid's box.
+        const iX = 1 / Dx, iY = 1 / Dy, iZ = 1 / Dz; // Infinity along an axis the ray doesn't cross
+        let t0 = 0.5, t1 = zb[row + x];
+        if (Dx !== 0) { const a = -ox * iX, b = (NX - ox) * iX; if (a < b) { if (a > t0) t0 = a; if (b < t1) t1 = b; } else { if (b > t0) t0 = b; if (a < t1) t1 = a; } } else if (ox < 0 || ox > NX) continue;
+        if (Dy !== 0) { const a = -oy * iY, b = (NY - oy) * iY; if (a < b) { if (a > t0) t0 = a; if (b < t1) t1 = b; } else { if (b > t0) t0 = b; if (a < t1) t1 = a; } } else if (oy < 0 || oy > NY) continue;
+        if (Dz !== 0) { const a = -oz * iZ, b = (NZ - oz) * iZ; if (a < b) { if (a > t0) t0 = a; if (b < t1) t1 = b; } else { if (b > t0) t0 = b; if (a < t1) t1 = a; } } else if (oz < 0 || oz > NZ) continue;
+        if (t1 <= t0) continue;
+        const sx = Dx > 0 ? 1 : -1, sy = Dy > 0 ? 1 : -1, sz = Dz > 0 ? 1 : -1;
+        const ex = Dx > 0 ? 1 : 0, ey = Dy > 0 ? 1 : 0, ez = Dz > 0 ? 1 : 0;
+        const tdx = Math.abs(iX), tdy = Math.abs(iY), tdz = Math.abs(iZ);
+        const jump = 1 / Math.max(Math.abs(Dx), Math.abs(Dy), Math.abs(Dz));
+        let t = t0 + 1e-4, ix = 0, iy = 0, iz = 0, mx = 0, my = 0, mz = 0, enter = true;
+        for (;;) {
+          if (enter) {
+            // (Re)start the walk at t. Truncation is flooring here: anything below 0 clamps to 0.
+            ix = (ox + Dx * t) | 0; iy = (oy + Dy * t) | 0; iz = (oz + Dz * t) | 0;
+            ix = ix < 0 ? 0 : ix >= NX ? NX - 1 : ix; iy = iy < 0 ? 0 : iy >= NY ? NY - 1 : iy; iz = iz < 0 ? 0 : iz >= NZ ? NZ - 1 : iz;
+            mx = Dx !== 0 ? (ix + ex - ox) * iX : Infinity;
+            my = Dy !== 0 ? (iy + ey - oy) * iY : Infinity;
+            mz = Dz !== 0 ? (iz + ez - oz) * iZ : Infinity;
+            enter = false;
+          }
+          const i = (iy * NZ + iz) * NX + ix;
+          const v = data[i];
+          if (v !== 0xFFFF) {
+            fb[row + x] = v & 0x100 ? v & 0xFF : cm[off + v];
+            zb[row + x] = t;
+            break;
+          }
+          const k = dist[i];
+          if (k > 1) { t += (k - 1) * jump; if (t >= t1) break; enter = true; continue; }
+          if (mx < my && mx < mz) { t = mx; ix += sx; mx += tdx; if (ix < 0 || ix >= NX) break; }
+          else if (my < mz) { t = my; iy += sy; my += tdy; if (iy < 0 || iy >= NY) break; }
+          else { t = mz; iz += sz; mz += tdz; if (iz < 0 || iz >= NZ) break; }
+          if (t >= t1) break;
+        }
+      }
+    }
+  }
+
   // ---- Sprites (far to near, depth tested) ----
   // Each sprite is a real upright card in the world, turned to face the camera across the
   // ground. Every pixel's ray is intersected with the card, exactly as the walls are cast, so
   // tilting the view changes nothing about where or how big things are.
   const list = [];
   for (const s of sprites) {
+    if (s.vox) continue;
     const spr = s.spr, res = spr.res || 1;
     const hx = s.x - cx, hz = s.z - cz, hd = Math.hypot(hx, hz);
     if (hd < 4) continue;
