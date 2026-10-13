@@ -3,6 +3,8 @@
 //   node tools/bake-viewmodel.js              bake everything
 //   node tools/bake-viewmodel.js --preview    raw renders of every frame -> tools/out/viewmodel-preview.png
 //   node tools/bake-viewmodel.js --calibrate  each model's four palm candidates at the ready pose
+//   node tools/bake-viewmodel.js --stage      bake to tools/out/staged/ instead of the game, for
+//                                             reviewing in the viewer (tools/viewer.js) first
 // VM_ONLY=club,knife limits a run to some models.
 //
 // The arm, its attacks (keyframes sampled into frames at fixed points of the swing) and the
@@ -17,6 +19,7 @@ const { root, inBakePage, png } = require('./bake/common');
 const preview = process.argv.includes('--preview');
 const calibrate = process.argv.includes('--calibrate');
 const big = process.argv.includes('--big'); // with --preview: full 4x resolution
+const stage = process.argv.includes('--stage');
 
 (async () => {
   // The arm, its moves and its models live in tools/bake/arm.mjs (shared with tools/viewer/).
@@ -59,7 +62,8 @@ const big = process.argv.includes('--big'); // with --preview: full 4x resolutio
   const phases = {};
   for (const [id, M] of Object.entries(MOVES)) phases[id] = M.frames;
   const raw = Buffer.concat(parts), packed = zlib.deflateRawSync(raw, { level: 9 });
-  const out = path.join(root, 'game', 'js', 'data', 'baked', 'viewmodel.js');
+  const out = stage ? path.join(root, 'tools', 'out', 'staged', 'viewmodel.js') : path.join(root, 'game', 'js', 'data', 'baked', 'viewmodel.js');
+  fs.mkdirSync(path.dirname(out), { recursive: true });
   fs.writeFileSync(out, `'use strict';\n// Baked by tools/bake-viewmodel.js from the Tripo arm-and-weapon models. Do not edit.\n`
     + `BAKED_VM.moves = ${JSON.stringify(used)};\nBAKED_VM.phases = ${JSON.stringify(phases)};\n`
     + `BAKED_VM.index = ${JSON.stringify(index)};\nBAKED_VM.data = '${packed.toString('base64')}';\n`);

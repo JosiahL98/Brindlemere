@@ -39,9 +39,10 @@ function keyArm(k) {
 // palm and weapon turned smoothly between them; the fist sits a forearm's length from the elbow.
 // `key` is the index of the key the pose is leaving.
 export function armPose(keys, t) {
-  const arms = keys.map(keyArm);
   let i = 0;
   while (i < keys.length - 2 && t > keys[i + 1].at) i++;
+  if (keys[0].tilt !== undefined) return rigidPose(keys, t, i);
+  const arms = keys.map(keyArm);
   const i0 = Math.max(0, i - 1), i3 = Math.min(keys.length - 1, i + 2);
   const u = Math.min(1, Math.max(0, (t - keys[i].at) / (keys[i + 1].at - keys[i].at))), u2 = u * u, u3 = u2 * u;
   const [p0, p1, p2, p3] = [arms[i0].elbow, arms[i].elbow, arms[i + 1].elbow, arms[i3].elbow];
@@ -56,22 +57,36 @@ export function armPose(keys, t) {
 // in game/js/game/player.js) and the phases its frames are sampled at. Frame 0 is the ready pose.
 // Keys give the elbow, the forearm's direction, which way the palm faces and where the weapon
 // points; the wrist bends between forearm and weapon, so the weapon can lag and then whip through.
-// At rest the arm is held forward, palm to the left, the weapon standing straight up.
-const READY = { elbow: [9.5, -10, -6], fore: [-0.2, 0.25, -0.95], palm: [-1, 0, 0], weapon: [0, 1, -0.1] };
-// Turning the wrist (and forearm) to the right tips the weapon up and to the right; the palm
-// turns up-left with it.
-const TIPPED = { palm: [-0.8, 0.6, 0], weapon: [0.6, 0.8, -0.1] };
+// The swing holds the wrist still, the fist keeping the weapon cocked COCK degrees towards the
+// thumb, so the hand never turns against the forearm: forearm, hand and weapon move as one, and
+// the arm does the work. At rest the palm faces left and the weapon stands straight up, so the
+// forearm rises at 90 - COCK degrees. Keys give where the fist is and how far the whole forearm,
+// hand and weapon lean to the right (degrees, as seen through the eyes; negative leans left).
+const COCK = 35, DEG = Math.PI / 180;
+const REST = { fore: [0, Math.sin((90 - COCK) * DEG), -Math.cos((90 - COCK) * DEG)], palm: [-1, 0, 0], weapon: [0, 1, 0] };
+const lean = (v, deg) => { const c = Math.cos(-deg * DEG), s = Math.sin(-deg * DEG); return [v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2]]; };
+function rigidPose(keys, t, i) {
+  const i0 = Math.max(0, i - 1), i3 = Math.min(keys.length - 1, i + 2);
+  const u = Math.min(1, Math.max(0, (t - keys[i].at) / (keys[i + 1].at - keys[i].at))), u2 = u * u, u3 = u2 * u;
+  const [p0, p1, p2, p3] = [keys[i0].hand, keys[i].hand, keys[i + 1].hand, keys[i3].hand];
+  const hand = [0, 1, 2].map((j) => 0.5 * (2 * p1[j] + (-p0[j] + p2[j]) * u + (2 * p0[j] - 5 * p1[j] + 4 * p2[j] - p3[j]) * u2 + (-p0[j] + 3 * p1[j] - 3 * p2[j] + p3[j]) * u3));
+  const tilt = keys[i].tilt + (keys[i + 1].tilt - keys[i].tilt) * smooth(u);
+  const fore = lean(REST.fore, tilt);
+  return { hand, fore, palm: lean(REST.palm, tilt), weapon: lean(REST.weapon, tilt), elbow: sub(hand, mul(fore, FORE)), key: i, tilt };
+}
+const READY = { hand: [7.4, -5.4, -14.5], tilt: 0 };
 export const MOVES = {
-  // Every weapon: the arm moves a little to the right as the wrist turns the weapon up and to the
-  // right, then drags it down and to the left across the screen, and comes back to rest.
+  // Every weapon: the fist shifts a little to the right as forearm, hand and weapon lean right,
+  // tipping the weapon up and to the right; then the arm drags it down and to the left across
+  // the screen, the lean easing through upright, and comes back to rest.
   swing: {
     keys: [
       { at: 0, ...READY },
-      { at: 0.18, elbow: [9.5, -6, -7.5], fore: [-0.15, 0.45, -0.88], ...TIPPED },
-      { at: 0.3, elbow: [8.5, -7.5, -9], fore: [-0.4, 0.25, -0.88], ...TIPPED },
-      { at: 0.42, elbow: [7, -9, -9.5], fore: [-0.7, 0.03, -0.71], palm: [-0.8, 0.6, 0], weapon: [0.5, 0.85, -0.15] },
-      { at: 0.55, elbow: [5, -9, -10], fore: [-0.83, 0, -0.56], palm: [-0.8, 0.6, 0], weapon: [0.45, 0.88, -0.15] },
-      { at: 0.85, elbow: [8, -10.5, -7], fore: [-0.35, 0.15, -0.92], palm: [-0.95, 0.3, 0], weapon: [0.2, 0.97, -0.1] },
+      { at: 0.18, hand: [8.4, -2.5, -14.5], tilt: 35 },
+      { at: 0.3, hand: [5.5, -4.3, -15], tilt: 33 },
+      { at: 0.42, hand: [1.5, -6.8, -15.5], tilt: 15 },
+      { at: 0.55, hand: [-1.5, -8.6, -16], tilt: -12 },
+      { at: 0.85, hand: [4, -7, -15], tilt: -4 },
       { at: 1.15, ...READY },
     ],
     frames: [0, 0.09, 0.18, 0.26, 0.32, 0.37, 0.42, 0.48, 0.56, 0.75, 0.95],

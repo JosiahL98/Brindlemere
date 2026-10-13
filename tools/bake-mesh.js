@@ -5,6 +5,7 @@
 // Each one's height, pole and actions are in tools/bake/bakes.mjs; any can be overridden:
 //   node tools/bake-mesh.js elsa --height 58 --res 2.5 --actions idle=idle:4,walk=walk:8:cycle
 //   --prop spear|pitchfork, --wide, --foot, --flip, --no-portrait (see bakes.mjs), --raw
+//   --stage  bake to tools/out/staged/<name>.js instead of the game, for reviewing in the viewer
 // Needs `npm install` in tools/ (three, puppeteer-core) and Chrome.
 'use strict';
 const fs = require('fs');
@@ -24,6 +25,7 @@ for (const k of ['actions', 'prop', 'foot']) { const v = opt(k); if (v !== undef
 if (flag('flip')) over.flip = true;
 if (flag('no-portrait')) over.noPortrait = true;
 const debugRaw = flag('raw');
+const stage = flag('stage');
 const chrome = opt('chrome') || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const name = args[0];
 if (!name) { console.error('usage: node tools/bake-mesh.js <name> [--height 58] [--actions ...]'); process.exit(1); }
@@ -106,7 +108,7 @@ function sheet(result, file) {
   if (pr) parts.push(Uint8Array.from(pr.data));
   const raw = Buffer.concat(parts.map((p) => Buffer.from(p)));
   const packed = zlib.deflateRawSync(raw, { level: 9 });
-  const out = path.join(root, 'game', 'js', 'data', 'baked', `${name}.js`);
+  const out = path.join(root, ...(stage ? ['tools', 'out', 'staged'] : ['game', 'js', 'data', 'baked']), `${name}.js`);
   fs.mkdirSync(path.dirname(out), { recursive: true });
   const meta = { res: cfg.res, height: result.height, actions: result.actions, index, portrait: pr ? [pr.w, pr.h, pr.ax, pr.ay, cfg.portrait.res] : null };
   fs.writeFileSync(out, `'use strict';\n// Baked by tools/bake-mesh.js from assets/tripo/${name}/ (a Tripo model, rigged and animated). Do not edit.\n`
