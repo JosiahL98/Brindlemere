@@ -13,7 +13,7 @@ const CAST = {
       outfit: 'apron', top: 'GREEN', topBias: -1.6, bottom: 'BROWN', accent: 'BONE', hat: 'kerchief', hatColor: 'BONE' },
   },
   tobin: {
-    name: 'Tobin', title: 'Blacksmith', map: 'town', at: [37.68, 34.73], ang: -2.27, wander: 0, work: true,
+    name: 'Tobin', title: 'Blacksmith', map: 'town', at: [37.627, 34.668], ang: -2.27, wander: 0, work: true,
     fights: { hp: 70, dmg: [5, 8], reach: 40, speed: 165, cooldown: 1.2, shout: ['Get away from my forge!', 'Come on, then!'] },
     look: { sex: 'm', age: 'adult', build: 0.9, fat: 0.15, skin: 2, eyes: 'BROWN', hair: { style: 'long', color: 'black' }, beard: 'moustache', stubble: true, brow: 'black',
       outfit: 'smith', top: 'GRAY', topBias: -2.5, bottom: 'BROWN', bottomBias: -2.5, accent: 'GRAY', held: 'hammer', work: 'hammer' },

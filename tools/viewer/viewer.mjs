@@ -93,7 +93,8 @@ const vil = { scene: new THREE.Scene() };
   ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
   const grid = new THREE.GridHelper(256, 16, 0x2f2f20, 0x46462f); grid.position.y = 0.05; // lines a quarter-tile (16 units) apart
   vil.setting.add(ground, grid);
-  // Tobin's anvil, where it stands in town: 28 units in front of him, its face 22.6 up.
+  // Tobin's anvil as it stands in town: 22.5 units in front of him, its face 22.6 up, its front
+  // (and so its horn on his left) towards him.
   const iron = new THREE.MeshLambertMaterial({ color: 0x55585e }), wood = new THREE.MeshLambertMaterial({ color: 0x5c4630 });
   const anvil = vil.anvil = new THREE.Group();
   const part = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; anvil.add(m); return m; };
@@ -102,7 +103,7 @@ const vil = { scene: new THREE.Scene() };
   part(new THREE.BoxGeometry(6, 4, 5), iron, 0, 17.5, 0);
   part(new THREE.BoxGeometry(14, 3.2, 6.4), iron, 1, 21, 0);
   const horn = part(new THREE.ConeGeometry(1.6, 5, 10), iron, -8.5, 21.6, 0); horn.rotation.z = Math.PI / 2;
-  anvil.position.set(0, 0, 27.7);
+  anvil.position.set(0, 0, 22.5); anvil.rotation.y = Math.PI;
   vil.setting.add(anvil);
   S.add(vil.setting);
   vil.extras = new THREE.Group(); S.add(vil.extras);
@@ -474,10 +475,11 @@ function frame(now) {
     drawGameVillager(cur.baked, cur.A.id, t, state.rot);
     $('#phase').textContent = `phase ${t.toFixed(3)} / 1 · frame ${f} of ${cur.A.frames}`;
     const H = (v) => (v ? vec(v.toArray().map((x) => x / h)) : '—');
-    if (targets) read += `wrist targets, in heights (x to their left, y up, z ahead): right ${H(targets.R)}   left ${H(targets.L)}\n`;
+    if (targets) read += `keyframe ${targets.key} → ${targets.key + 1}   wrists bent ${targets.bend.R}° right, ${targets.bend.L}° left${targets.miss != null ? `   left hand ${(targets.miss * h).toFixed(1)} units off the pole` : ''}\n`
+      + `wrist targets, in heights (x to their left, y up, z ahead): right ${H(targets.R)}   left ${H(targets.L)}\n`;
     const hand = (side) => { const b = cur.V.M.model.getObjectByName(side + '_Hand'); return b ? b.getWorldPosition(new THREE.Vector3()) : null; };
     if (cur.V.M.model.getObjectByName('R_Hand')) read += `wrists reached: right ${H(hand('R'))}   left ${H(hand('L'))}   (height ${h} units)\n`;
-    if (cur.id === 'tobin') read += `the anvil's face is 22.6 units up (${(22.6 / h).toFixed(2)} of his height), 27.7 ahead (${(27.7 / h).toFixed(2)})`;
+    if (cur.id === 'tobin') read += `the anvil's face is 22.6 units up (${(22.6 / h).toFixed(2)} of his height), 22.5 ahead (${(22.5 / h).toFixed(2)})`;
   }
   $('#readout').innerHTML = read;
 }

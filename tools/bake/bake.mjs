@@ -4,6 +4,7 @@
 // supersampling, then palette quantisation with ordered dithering and darkened silhouettes.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { SCRIPTS, rigOf, poseScript, sampleScript, makePole, makeTongs, makeHay, gripOf, curlHand, poleClearance, regrip, turnBone, holdSetup, holdApply } from './body.mjs';
 
 const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const LIGHT_VIEW = new THREE.Vector3(-0.6, 0.62, 0.62).normalize(); // as in js/sdf.js
@@ -174,103 +175,17 @@ function shoot(M, yaw, pitch, res, ss, frame, cfg) {
   return { w: cw, h: ch, ax: Math.round(-left * res) - x0, ay: Math.round(top * res) - y0, data: out };
 }
 
-// ---- Scripted poses and held poles -----------------------------------------------------------
-// Some actions are posed here instead of coming from a Tripo preset: the idle clip's first frame
-// with the arms moved by two-bone IK to hand positions given in the character's own terms (in
-// heights: x to its left, y up, z ahead), elbows bending towards a pole, the upper body leant
-// forward. Long poles (a spear, a pitchfork) are separate meshes held in the hands, since auto-
-// rigging bends them along the legs.
-const SCRIPTS = {
-  // A blacksmith's blow with one arm: up past the shoulder, down onto the anvil, a small bounce.
-  // (A villager's wrist reaches about 0.26 of their height from the shoulder.)
-  hammer: { period: 1.1, keys: [
-    { at: 0, R: [-0.2, 0.9, 0.02], Rp: [-1, -0.2, -0.6] },
-    { at: 0.3, R: [-0.17, 0.84, 0.12], Rp: [-1, -0.3, -0.5], lean: 2 },
-    { at: 0.45, R: [-0.1, 0.57, 0.22], Rp: [-1, -0.4, -0.3], lean: 10 },
-    { at: 0.6, R: [-0.1, 0.6, 0.21], Rp: [-1, -0.4, -0.3], lean: 9 },
-    { at: 0.8, R: [-0.15, 0.76, 0.14], Rp: [-1, -0.3, -0.5], lean: 4 },
-    { at: 1, R: [-0.2, 0.9, 0.02], Rp: [-1, -0.2, -0.6] },
-  ] },
-  // Both hands on the shaft, the left ahead of the right: draw back, drive it straight ahead.
-  thrust: { period: 0.75, keys: [
-    { at: 0, R: [-0.06, 0.55, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.01, 0.6, 0.17], Lp: [0.7, -0.7, 0] },
-    { at: 0.25, R: [-0.07, 0.55, -0.09], Rp: [-1, -0.6, -0.5], L: [-0.02, 0.59, 0.11], Lp: [0.7, -0.7, 0], lean: -4 },
-    { at: 0.5, R: [-0.04, 0.6, 0.12], Rp: [-1, -0.5, -0.2], L: [0, 0.62, 0.24], Lp: [0.6, -0.8, 0], lean: 14 },
-    { at: 0.65, R: [-0.04, 0.6, 0.1], Rp: [-1, -0.5, -0.2], L: [0, 0.62, 0.22], Lp: [0.6, -0.8, 0], lean: 12 },
-    { at: 1, R: [-0.06, 0.55, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.01, 0.6, 0.17], Lp: [0.7, -0.7, 0] },
-  ] },
-  // Forking hay: tines down to the ground ahead, then lifted and tossed.
-  fork: { period: 1.6, keys: [
-    { at: 0, R: [-0.06, 0.62, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.52, 0.14], Lp: [0.7, -0.7, 0], lean: 14 },
-    { at: 0.35, R: [-0.06, 0.6, -0.02], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.46, 0.15], Lp: [0.7, -0.7, 0], lean: 22 },
-    { at: 0.65, R: [-0.07, 0.52, 0.0], Rp: [-1, -0.5, -0.4], L: [-0.02, 0.68, 0.12], Lp: [0.7, -0.7, 0], lean: 2 },
-    { at: 1, R: [-0.06, 0.62, -0.04], Rp: [-1, -0.6, -0.4], L: [-0.02, 0.52, 0.14], Lp: [0.7, -0.7, 0], lean: 14 },
-  ] },
-};
+// ---- Held poles ------------------------------------------------------------------------------
+// Scripted moves (tools/bake/body.mjs) pose the whole body and place any pole themselves. Otherwise
+// a pole (Rolf's spear, Odo's pitchfork) stands upright in the right hand, butt on the ground, or
+// for a captured move lies along a given way through the right grip.
 const boneNamed = (M, n) => M.model.getObjectByName(n);
 const worldPos = (o) => o.getWorldPosition(new THREE.Vector3());
-// Turn bone b, in the world, by rotation q (its children follow).
-function turnBone(b, q) {
-  const pw = b.parent.getWorldQuaternion(new THREE.Quaternion()), bw = b.getWorldQuaternion(new THREE.Quaternion());
-  b.quaternion.copy(pw.invert().multiply(q.clone().multiply(bw)));
-  b.updateMatrixWorld(true);
-}
-const swingBone = (b, from, to) => turnBone(b, new THREE.Quaternion().setFromUnitVectors(from.clone().normalize(), to.clone().normalize()));
-// Two-bone IK: the hand's wrist to `target`, the elbow bending towards `pole` (world space).
-function ikArm(M, side, target, pole) {
-  const up = boneNamed(M, side + '_Upperarm'), fo = boneNamed(M, side + '_Forearm'), ha = boneNamed(M, side + '_Hand');
-  const S = worldPos(up), E = worldPos(fo), H = worldPos(ha);
-  const L1 = S.distanceTo(E), L2 = E.distanceTo(H);
-  const d = target.clone().sub(S), L = Math.min(d.length(), L1 + L2 - 1e-3), n = d.normalize();
-  const a = (L1 * L1 - L2 * L2 + L * L) / (2 * L), r = Math.sqrt(Math.max(0, L1 * L1 - a * a));
-  const p = pole.clone().projectOnPlane(n).normalize();
-  swingBone(up, E.clone().sub(S), S.clone().addScaledVector(n, a).addScaledVector(p, r).sub(S));
-  const E3 = worldPos(fo);
-  swingBone(fo, worldPos(ha).sub(E3), S.clone().addScaledVector(n, L).sub(E3));
-}
-// The script's pose at phase u (0..1), applied over whatever pose the model is in.
-function applyScript(M, S, u, h) {
-  let i = 0;
-  while (i < S.keys.length - 2 && u > S.keys[i + 1].at) i++;
-  const k0 = S.keys[i], k1 = S.keys[i + 1], s = Math.min(1, Math.max(0, (u - k0.at) / (k1.at - k0.at))), e = s * s * (3 - 2 * s);
-  const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * e);
-  const lean = ((k0.lean || 0) + ((k1.lean || 0) - (k0.lean || 0)) * e) * Math.PI / 180;
-  if (lean) turnBone(boneNamed(M, 'Spine01'), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), lean));
-  const targets = {};
-  for (const side of ['R', 'L']) {
-    if (!k0[side]) continue;
-    targets[side] = new THREE.Vector3(...mix(k0[side], k1[side])).multiplyScalar(h);
-    ikArm(M, side, targets[side], new THREE.Vector3(...mix(k0[side + 'p'], k1[side + 'p'])));
-  }
-  return targets; // where the wrists were sent (world space)
-}
-// A pole held in the hands: a shaft with an iron spearhead or a pitchfork's tines.
-function makePole(kind, h) {
-  const g = new THREE.Group(), wood = new THREE.MeshLambertMaterial({ color: 0x6a4a2c }), iron = new THREE.MeshLambertMaterial({ color: 0x8c8f93 });
-  const len = kind === 'spear' ? 1.3 * h : 1.05 * h, r = 0.0085 * h;
-  const add = (geo, mat, y, rot) => { const m = new THREE.Mesh(geo, mat); m.position.y = y; if (rot) m.rotation.z = rot; m.castShadow = m.receiveShadow = true; g.add(m); return m; };
-  add(new THREE.CylinderGeometry(r, r * 1.1, len, 8), wood, len / 2);
-  if (kind === 'spear') add(new THREE.ConeGeometry(r * 2.6, 0.1 * h, 6), iron, len + 0.05 * h);
-  else {
-    add(new THREE.BoxGeometry(0.1 * h, r * 1.6, r * 1.6), iron, len);
-    for (const x of [-0.045, 0, 0.045]) { const t = add(new THREE.CylinderGeometry(r * 0.55, r * 0.25, 0.12 * h, 5), iron, len + 0.06 * h); t.position.x = x * h; }
-  }
-  return { g, len };
-}
-// Where a hand grips: a little past the wrist, along the forearm.
-function gripOf(M, side, h) {
-  const H = worldPos(boneNamed(M, side + '_Hand')), E = worldPos(boneNamed(M, side + '_Forearm'));
-  return H.clone().addScaledVector(H.clone().sub(E).normalize(), 0.055 * h);
-}
-// Upright in the right hand, butt on the ground; or, in two hands, through both grips.
-function placePole(M, P, h, twoHands) {
-  const R = gripOf(M, 'R', h);
-  let butt, axis;
-  if (twoHands && twoHands.isVector3) { axis = twoHands; butt = R.clone().addScaledVector(axis, -0.32 * h); } // along a given grip
-  else if (twoHands) { axis = gripOf(M, 'L', h).sub(R).normalize(); butt = R.clone().addScaledVector(axis, -0.32 * h); }
-  else { axis = new THREE.Vector3(0, 1, 0); butt = new THREE.Vector3(R.x, 0.01 * h, R.z); }
+function placePole(M, P, h, axis) {
+  const R = gripOf({ ha: boneNamed(M, 'R_Hand'), fo: boneNamed(M, 'R_Forearm') }, h);
+  const butt = axis ? R.clone().addScaledVector(axis, -0.32 * h) : new THREE.Vector3(R.x, 0.01 * h, R.z);
   P.g.position.copy(butt);
-  P.g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis);
+  P.g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), axis || new THREE.Vector3(0, 1, 0));
   P.g.updateMatrixWorld(true);
 }
 
@@ -468,6 +383,16 @@ async function loadVillager(cfg, A, scale) {
   M.holder.updateMatrixWorld(true);
   const rest0 = bones(M.model).map((b) => [b, b.position.clone(), b.quaternion.clone(), b.scale.clone()]);
   M.rest = () => { for (const [b, p, q, sc] of rest0) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(sc); } M.holder.updateMatrixWorld(true); };
+  if (script) {
+    // What the move needs to know of the rig, and what the right hand holds (bakes.mjs).
+    M.rig = rigOf(M);
+    if (cfg.regrip) M.hammer = regrip(M, cfg.regrip, cfg.height);
+    M.item = cfg.hold || null;
+    // Hands that hold a pole or tongs close round them (their fingers curled in the mesh).
+    if (pole && script.keys[0].aim) for (const s of ['R', 'L']) curlHand(M, M.rig[s], s, cfg.height, 0.0095);
+    if (script.tongs) { M.tongs = makeTongs(cfg.height); M.extras = (M.extras || []).concat(M.tongs.parts); curlHand(M, M.rig.L, 'L', cfg.height, 0.008); }
+    if (script.hay && pole) { M.hay = makeHay(cfg.height, pole, script.hay); M.extras = (M.extras || []).concat(M.hay.mound); }
+  }
   // A strike uses the first swing of a preset that may repeat it several times.
   const period = mocap ? mocap.duration : script ? script.period : beast ? { rest: 2, lunge: 0.6, flinch: 0.4, die: 0.9 }[beast] : A.cycle || A.once ? cyclePeriod(M) : M.clip.duration;
   const T = mocap ? retargetSetup(M, mocap) : null;
@@ -479,6 +404,8 @@ async function loadVillager(cfg, A, scale) {
     const hb = boneNamed(M, cfg.upright);
     upright = { bone: hb, up: new THREE.Vector3(0, 1, 0).applyQuaternion(hb.getWorldQuaternion(new THREE.Quaternion()).invert()) };
     if (mocap) bindPose(M); else if (script) M.rest(); else rest();
+    // The arm holding it posed as people hold a mug (body.mjs), not left to the clip.
+    if (!mocap && !script && !beast) upright.hold = holdSetup(M, cfg.upright[0], upright.up, cfg.height, () => bindPose(M), rest);
   }
   return { M, pole, base, period, script, beast, mocap, T, A, cfg, upright };
 }
@@ -487,10 +414,11 @@ function poseVillager(V, u) {
   const { M, pole, base, period, script, beast, mocap, T, A, cfg, upright } = V;
   let targets = null;
   if (mocap) retarget(M, mocap, T, u * period);
-  else if (script) { M.rest(); targets = applyScript(M, script, u, cfg.height); }
+  else if (script) { M.rest(); targets = poseScript(M, script, u, cfg.height, pole); }
   else if (beast) beastPose(M, beast, u, cfg.height, base, cfg);
   else poseAt(M, A.once ? u * period * 0.92 : u * period);
-  if (upright) {
+  if (upright && upright.hold) { const bend = holdApply(upright.hold); M.holder.updateMatrixWorld(true); targets = { bend: { [cfg.upright[0]]: bend } }; }
+  else if (upright) {
     // Turn the hand back so what it holds stands up again.
     const now = upright.up.clone().applyQuaternion(upright.bone.getWorldQuaternion(new THREE.Quaternion()));
     turnBone(upright.bone, new THREE.Quaternion().setFromUnitVectors(now.normalize(), new THREE.Vector3(0, 1, 0)));
@@ -501,7 +429,7 @@ function poseVillager(V, u) {
     // little down) and leans a quarter of the way with the forearm, while the arm drives it.
     const R = worldPos(boneNamed(M, 'R_Hand')), fore = R.clone().sub(worldPos(boneNamed(M, 'R_Forearm'))).normalize();
     placePole(M, pole, cfg.height, new THREE.Vector3(0, -0.08, 1).normalize().multiplyScalar(0.75).addScaledVector(fore, 0.25).normalize());
-  } else if (pole) placePole(M, pole, cfg.height, !!(script && script.keys[0].L));
+  } else if (pole && !script) placePole(M, pole, cfg.height, null);
   return targets;
 }
 // The phase of each baked frame of an action.
@@ -525,8 +453,8 @@ window.bake = async (cfg) => {
       meta.travel = +(2 * (hi - lo)).toFixed(2);
     }
     out.actions[A.id] = meta;
-    const R = cfg.height * (cfg.wide || 0.45); // animals are long: a wider frame
-    const frame = { left: -R, right: R, bottom: -cfg.height * 0.15, top: cfg.height * 1.12 };
+    const R = cfg.height * (cfg.wide || 0.45); // animals are long, and poles stick out: a wider frame
+    const frame = { left: -R, right: R, bottom: -cfg.height * 0.15, top: cfg.height * (cfg.top || 1.12) };
     for (let f = 0; f < A.frames; f++) {
       poseVillager(V, framePhase(A, f));
       for (let rot = 0; rot < 8; rot++) {
@@ -547,22 +475,6 @@ window.bake = async (cfg) => {
   return out;
 };
 window.bakeReady = true;
-// Dev aid: where a script puts the hands, against where it asked for them (in heights).
-window.scriptCheck = async (name, script, height) => {
-  const M = await loadModel(`/assets/tripo/${name}/anim-idle.glb`);
-  poseAt(M, 0);
-  const b = worldBox(M), scale = height / (b.max.y - b.min.y);
-  M.holder.scale.setScalar(scale); poseAt(M, 0);
-  const b0 = worldBox(M), c = b0.getCenter(new THREE.Vector3());
-  M.holder.position.set(-c.x, -b0.min.y, -c.z); poseAt(M, 0);
-  const r = (v) => v.toArray().map((x) => +(x / height).toFixed(3));
-  const out = { rest: { R: r(worldPos(boneNamed(M, 'R_Hand'))), L: r(worldPos(boneNamed(M, 'L_Hand'))), RS: r(worldPos(boneNamed(M, 'R_Upperarm'))), head: r(worldPos(boneNamed(M, 'Head'))) } };
-  for (const u of [0, 0.5]) {
-    poseAt(M, 0); applyScript(M, SCRIPTS[script], u, height);
-    out[u] = { R: r(worldPos(boneNamed(M, 'R_Hand'))), L: r(worldPos(boneNamed(M, 'L_Hand'))), gR: r(gripOf(M, 'R', height)), gL: r(gripOf(M, 'L', height)) };
-  }
-  return out;
-};
 // Dev aid: a model's bones, and which bones the vertices farthest from the body (a held spear or
 // hammer) are skinned to.
 window.boneInfo = async (url) => {
@@ -663,38 +575,29 @@ function placeFused(M, F, fr, cfg) {
   tube(M.sleeves[0], C, E, M.sleeveR * k * 0.85, 0);
   M.sleeves[1].position.copy(E); M.sleeves[1].scale.setScalar(M.sleeveR * k * 0.95);
   tube(M.sleeves[2], E, S, M.sleeveR * k, 0);
-  // The wrist: the models hold their weapons in line with the forearm, so the fist and weapon
-  // (a second copy of the model, cut off at the wrist) turn about the palm's axis until the
-  // weapon points the frame's way. The forearm copy ends at the same cut.
+  // The wrist doesn't bend: the fist is a second copy of the model, the same way round as the
+  // forearm, cut where the forearm copy is (the two are told apart for the sleeve's mask).
   const W = H.clone().addScaledVector(A, -cfg.fistWidth * 0.6), MH = M.hand;
   M.clip2.normal.copy(A).negate(); M.clip2.constant = A.dot(W);
-  let qw = new THREE.Quaternion();
-  if (fr.weapon && F.tip) {
-    const w0 = V3(F.tip).sub(h).normalize().applyQuaternion(q).projectOnPlane(P), w1 = V3(fr.weapon).projectOnPlane(P);
-    if (w0.lengthSq() > 1e-4 && w1.lengthSq() > 1e-4) {
-      w0.normalize(); w1.normalize();
-      qw = new THREE.Quaternion().setFromAxisAngle(P, Math.atan2(w0.clone().cross(w1).dot(P), w0.dot(w1)));
-    }
-  }
-  MH.holder.quaternion.copy(qw).multiply(q);
+  MH.holder.quaternion.copy(q);
   MH.holder.scale.setScalar(k);
-  MH.holder.position.copy(M.holder.position).sub(W).applyQuaternion(qw).add(W);
+  MH.holder.position.copy(M.holder.position);
   MH.holder.updateMatrixWorld(true);
-  const n = A.clone().applyQuaternion(qw);
   MH.clip.constant = 1e6; MH.clip.normal.set(0, 1, 0);
-  MH.clip2.normal.copy(n); MH.clip2.constant = -n.dot(W);
+  MH.clip2.normal.copy(A); MH.clip2.constant = -A.dot(W);
   M.sleeves[3].position.copy(W); M.sleeves[3].scale.setScalar(M.sleeveR * k * 0.72);
-  if (M.weapon) {
-    // The handle's axis in the world, the hand copy cut there, and the weapon copy turned about it.
-    const at = MH.holder.localToWorld(M.spin.at.clone()), dir = M.spin.dir.clone().applyQuaternion(MH.holder.quaternion).normalize();
-    MH.clip3.normal.copy(dir).negate(); MH.clip3.constant = dir.dot(at);
-    const MW = M.weapon, qs = new THREE.Quaternion().setFromAxisAngle(dir, F.spin * Math.PI / 180);
-    MW.holder.quaternion.copy(qs).multiply(MH.holder.quaternion);
-    MW.holder.scale.setScalar(k);
-    MW.holder.position.copy(MH.holder.position).sub(at).applyQuaternion(qs).add(at);
+  if (M.weapon && fr.weapon) {
+    // The weapon through the fist: its handle along the frame's weapon direction, coming out of
+    // the top of the fist where the grip line (loadFused) does, sunk a little into it; its flat
+    // facing the palm's way.
+    const MW = M.weapon, G = MW.grip, way = V3(fr.weapon).normalize(), flat = P.clone().projectOnPlane(way).normalize();
+    const out = MH.holder.localToWorld(G.fist.at.clone()).addScaledVector(way, G.fist.top * k - (cfg.sink || 0.18) * cfg.fistWidth);
+    const qw = aim(G.way, way, G.flat, flat);
+    MW.holder.quaternion.copy(qw);
+    MW.holder.scale.setScalar(G.k);
+    MW.holder.position.copy(out).sub(G.root.clone().multiplyScalar(G.k).applyQuaternion(qw));
     MW.holder.updateMatrixWorld(true);
-    MW.clip.constant = 1e6; MW.clip.normal.set(0, 1, 0); MW.clip2.constant = 1e6; MW.clip2.normal.set(0, 1, 0);
-    MW.clip3.normal.copy(dir); MW.clip3.constant = -dir.dot(at);
+    for (const c of [MW.clip, MW.clip2, MW.clip3]) { c.constant = 1e6; c.normal.set(0, 1, 0); }
   }
 }
 // Render whatever is in `objs` from the eye; returns the sprite cropped, at screen coordinates.
@@ -729,10 +632,10 @@ function shootScreen(objs, cfg, rawOut, M) {
 function sleeveMask(M, cam, W, H) {
   const saved = [], white = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }), black = new THREE.MeshBasicMaterial({ color: 0, side: THREE.DoubleSide });
   const whiteArm = white.clone(); whiteArm.clippingPlanes = [M.clip, M.clip2];
-  black.clippingPlanes = [M.hand.clip2, M.hand.clip3];
+  black.clippingPlanes = [M.hand.clip2];
   M.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = whiteArm; } });
   M.hand.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = black; } });
-  if (M.weapon) { const bw = black.clone(); bw.clippingPlanes = [M.weapon.clip3]; M.weapon.model.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = bw; } }); }
+  if (M.weapon) { const bw = black.clone(); bw.clippingPlanes = []; M.weapon.holder.traverse((o) => { if (o.isMesh) { saved.push([o, o.material]); o.material = bw; } }); }
   for (const m of M.sleeves) { saved.push([m, m.material]); m.material = white; }
   renderer.shadowMap.enabled = false;
   renderer.render(scene, cam);
@@ -775,26 +678,158 @@ function quantiseScreen(px, W, H, ss, light, rawOut, mask) {
 // An arm-and-weapon model ready to pose: a forearm copy and a hand copy (split at the wrist by
 // placeFused), scaled from the fist's width, with linen sleeve pieces for the forearm, elbow,
 // upper arm and wrist. F (from tools/bake/arm.mjs) is copied, mirrored if the model needs it.
-async function loadFused(F, cfg) {
+// Which of a fused model's points are the weapon and which the arm (sleeve, wrist and fist), so
+// the weapon can be turned in the fist while the hand stays straight on the forearm. By colour
+// (the sleeve's off-white, the skin's ruddy tones, anything else the weapon's) and by where a point
+// is along the weapon's line (F.hand to F.tip): beyond the fist it's all weapon; within and behind
+// the fist, only a thin core round the line is (the handle, the pommel, a haft's butt), and not
+// skin-coloured where the forearm runs alongside it. Wooden handles and hafts share the skin's
+// colour, so there the line alone decides. Returns, per mesh, 1 for a weapon vertex.
+function fusedRgb(o) {
+  const img = o.material.map && o.material.map.image;
+  if (!img) return null;
+  const cv = document.createElement('canvas');
+  cv.width = img.width; cv.height = img.height;
+  const g2 = cv.getContext('2d'); g2.drawImage(img, 0, 0);
+  const px = g2.getImageData(0, 0, img.width, img.height).data, uv = o.geometry.attributes.uv;
+  return (i) => {
+    const u = uv.getX(i), w = uv.getY(i);
+    const x = Math.min(img.width - 1, Math.max(0, Math.floor((u - Math.floor(u)) * img.width)));
+    const y = Math.min(img.height - 1, Math.max(0, Math.floor((w - Math.floor(w)) * img.height)));
+    const k = (y * img.width + x) * 4;
+    return [px[k], px[k + 1], px[k + 2]];
+  };
+}
+function weaponPoints(model, F, mirror) {
+  const fore = V3(F.hand).sub(V3(F.elbow)).normalize();
+  let h = V3(F.hand), w = V3(F.tip).sub(h).normalize();
+  const inLine = w.dot(fore) > Math.cos(25 * Math.PI / 180), core = F.core || 0.055;
+  const meshes = [];
+  model.updateMatrixWorld(true);
+  model.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  const all = meshes.map((o) => {
+    const look = fusedRgb(o), pos = o.geometry.attributes.position, n = pos.count, p = [], cls = new Uint8Array(n), rgb = new Uint8Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const v = new THREE.Vector3().fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
+      if (mirror) v.x = -v.x;
+      p.push(v);
+      const c = look ? look(i) : [0, 0, 0], [hh, sat, val] = hsv(...c);
+      rgb.set(c, i * 3);
+      cls[i] = sat < 0.2 && val > 0.55 ? 0 : (hh < 32 || hh > 340) && sat > 0.22 && sat < 0.72 && val > 0.42 ? 1 : 2; // sleeve, skin, other
+    }
+    return { o, p, cls, rgb, n, s: new Float32Array(n), r: new Float32Array(n) };
+  });
+  const measure = () => { for (const m of all) for (let i = 0; i < m.n; i++) { const d = m.p[i].clone().sub(h), a = d.dot(w); m.s[i] = a; m.r[i] = d.addScaledVector(w, -a).length(); } };
+  const fistReach = () => {
+    // Its skin near the grip, off the line (a wooden handle on the line can be skin-coloured too).
+    const fs = [];
+    for (const m of all) for (let i = 0; i < m.n; i++) if (m.cls[i] === 1 && m.r[i] > 0.04 && Math.hypot(m.s[i], m.r[i]) < 0.3) fs.push(m.s[i]);
+    fs.sort((x, y) => x - y);
+    return [fs[Math.floor(fs.length * 0.02)] || -0.1, fs[Math.floor(fs.length * 0.98)] || 0.1];
+  };
+  measure();
+  let [lo, hi] = fistReach();
+  // The weapon's own line, from the middles of thin slices of it just past the fist (the fist's
+  // middle, which the line was drawn from, is off to one side of the handle).
+  const mids = [];
+  for (let k = 0; k < 5; k++) {
+    const s0 = hi + 0.02 + k * 0.03, pts = [];
+    for (const m of all) for (let i = 0; i < m.n; i++) if (m.s[i] >= s0 && m.s[i] < s0 + 0.03 && m.r[i] < 0.1 && !(m.cls[i] === 1 && m.r[i] > 0.04)) pts.push(m.p[i]);
+    if (pts.length >= 10) mids.push(pts.reduce((acc, q) => acc.add(q), new THREE.Vector3()).multiplyScalar(1 / pts.length));
+  }
+  if (mids.length >= 3 && !F.tipLine) {
+    const c = mids.reduce((acc, q) => acc.add(q), new THREE.Vector3()).multiplyScalar(1 / mids.length), d = mids[mids.length - 1].clone().sub(mids[0]).normalize();
+    if (d.dot(w) > 0.9) { w = d; h = c.clone().addScaledVector(d, V3(F.hand).sub(c).dot(d)); measure(); [lo, hi] = fistReach(); }
+  }
+  // How thick the handle (or the blade's root) is just past the fist.
+  const rs = [];
+  for (const m of all) for (let i = 0; i < m.n; i++) if (m.s[i] > hi + 0.02 && m.s[i] < hi + 0.08 && m.r[i] < 0.08 && m.cls[i] !== 1) rs.push(m.r[i]);
+  rs.sort((x, y) => x - y);
+  const rh = Math.min(core, rs.length ? rs[Math.floor(rs.length * 0.7)] : 0.03);
+  const parts = all.map(({ o, cls, s, r, n }) => {
+    const out = new Uint8Array(n);
+    for (let i = 0; i < n; i++) {
+      // Past the fist, all weapon but for the knuckles; within it, the handle; behind it, the
+      // pommel or a handle's end (not skin or sleeve, where the forearm runs alongside), or for a
+      // handle crossing the fist, its butt, whatever its colour. 1 past, 2 within, 3 behind.
+      if (s[i] > hi + 0.01) out[i] = cls[i] === 1 && r[i] > 1.25 * rh && s[i] < hi + 0.06 ? 0 : 1;
+      else if (s[i] >= lo) out[i] = r[i] < 1.15 * rh || (cls[i] === 2 && r[i] < core) ? 2 : 0;
+      else if (inLine) out[i] = cls[i] === 2 && r[i] < core && s[i] > lo - 0.35 ? 3 : 0;
+      else out[i] = r[i] < Math.max(core, 2.2 * rh) ? 3 : 0;
+    }
+    return { o, weapon: out };
+  });
+  // The handle's colour: a grip of leather or wire inside the fist, or else (a wooden handle, the
+  // colour of skin) the wood just past it.
+  const avg = (want) => { let n = 0; const c = [0, 0, 0]; for (const m of all) for (let i = 0; i < m.n; i++) if (want(m, i)) { n++; for (let j = 0; j < 3; j++) c[j] += m.rgb[i * 3 + j]; } return n > 20 ? c.map((x) => x / n) : null; };
+  const colour = avg((m, i) => m.s[i] >= lo && m.s[i] <= hi && m.r[i] < rh && m.cls[i] === 2)
+    || avg((m, i) => m.s[i] > hi + 0.01 && m.s[i] < hi + 0.08 && m.r[i] < 1.2 * rh) || [110, 80, 50];
+  return { parts, grip: h.clone().addScaledVector(w, (lo + hi) / 2), at: h, way: w, lo, hi, rh, colour };
+}
+// Keep only the triangles of a mesh with at least two corners among the codes wanted.
+function keepPart(o, code, want) {
+  const g = o.geometry, idx = g.index ? g.index.array : Array.from({ length: g.attributes.position.count }, (_, i) => i), keep = [];
+  for (let t = 0; t < idx.length; t += 3) {
+    const k = want.has(code[idx[t]]) + want.has(code[idx[t + 1]]) + want.has(code[idx[t + 2]]);
+    if (k >= 2) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+  }
+  o.geometry = g.clone();
+  o.geometry.setIndex(keep);
+}
+
+// A model's points flipped for one generated as a left hand, and its scale: its fist cfg.fistWidth
+// across.
+function fistScale(F, pts, cfg) {
+  const h = V3(F.hand), fore = h.clone().sub(V3(F.elbow)).normalize();
+  const u = new THREE.Vector3(1, 0, 0).projectOnPlane(fore).normalize(), v = fore.clone().cross(u);
+  const near = pts.filter((p) => p.distanceTo(h) < 0.15).map((p) => p.clone().sub(h));
+  const range = (a) => Math.max(...near.map((p) => p.dot(a))) - Math.min(...near.map((p) => p.dot(a)));
+  return cfg.fistWidth / Math.max(range(u), range(v));
+}
+function mirrored(F) {
   F = JSON.parse(JSON.stringify(F));
+  if (F.mirror) for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
+  return F;
+}
+// An arm holding a weapon. The arm is always the plain fist (cfg.fist), held straight on the
+// forearm, so the hand never bends at the wrist; the weapon is cut out of its own model (which
+// holds it in a fist of its own) and set through that fist, its handle crossing it at whatever
+// angle the pose asks, the blade's flat (or an axe's head) facing the palm's way: F.palm in the
+// weapon's model, turned half round for F.spin.
+async function loadFused(F0, cfg) {
+  const own = !F0.tip || !cfg.fist, F = mirrored(own ? F0 : cfg.fist), Wc = own ? null : mirrored(F0);
   const M = await loadStatic(F.url);
   M.hand = await loadStatic(F.url);
-  // spin: the part of the weapon above the fist (a hammer's head, a knife's blade) turned this many
-  // degrees about the handle, for models that came out holding it facing sideways. A third copy.
-  if (F.spin) M.weapon = await loadStatic(F.url);
-  if (F.mirror) {
-    // Generated as a left hand: flip it into a right one (points and all) before posing.
-    M.model.scale.x *= -1; M.hand.model.scale.x *= -1;
-    if (M.weapon) M.weapon.model.scale.x *= -1;
-    for (const p of M.pts) p.x = -p.x;
-    for (const k of ['elbow', 'hand', 'palm', 'tip']) if (F[k]) F[k] = [-F[k][0], F[k][1], F[k][2]];
+  if (F.mirror) { M.model.scale.x *= -1; M.hand.model.scale.x *= -1; for (const p of M.pts) p.x = -p.x; }
+  if (Wc) {
+    const W = M.weapon = await loadStatic(Wc.url);
+    if (Wc.mirror) { W.model.scale.x *= -1; for (const p of W.pts) p.x = -p.x; }
+    const cut = weaponPoints(W.model, Wc, false), keep = new Set([1, 3]);
+    for (const { o, weapon } of cut.parts) keepPart(o, weapon, keep);
+    // What was in its own fist goes (its fingers with it); a plain handle of the same colour runs
+    // through the fist instead, from where the blade or head starts to the pommel or butt.
+    const len = cut.hi - cut.lo + 0.03, col = new THREE.Color().setRGB(...cut.colour.map((x) => x / 255), THREE.SRGBColorSpace);
+    const handle = new THREE.Mesh(new THREE.CylinderGeometry(cut.rh * 0.95, cut.rh * 0.95, len, 12), new THREE.MeshLambertMaterial({ color: col, clippingPlanes: [W.clip, W.clip2, W.clip3] }));
+    handle.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cut.way);
+    handle.position.copy(cut.at).addScaledVector(cut.way, (cut.lo + cut.hi) / 2);
+    handle.castShadow = handle.receiveShadow = true;
+    W.holder.add(handle);
+    const n = V3(Wc.palm).projectOnPlane(cut.way).normalize();
+    W.grip = { root: cut.at.clone().addScaledVector(cut.way, cut.hi), way: cut.way, flat: Wc.spin ? n.negate() : n, k: fistScale(Wc, W.pts, cfg) };
+    M.W = Wc;
   }
   const h = V3(F.hand), fore = h.clone().sub(V3(F.elbow)).normalize();
-  // Width of the fist across the forearm, from the points around its centre.
-  const u = new THREE.Vector3(1, 0, 0).projectOnPlane(fore).normalize(), v = fore.clone().cross(u);
-  const near = M.pts.filter((p) => p.distanceTo(h) < 0.15).map((p) => p.clone().sub(h));
-  const range = (a) => Math.max(...near.map((p) => p.dot(a))) - Math.min(...near.map((p) => p.dot(a)));
-  F.k = cfg.fistWidth / Math.max(range(u), range(v));
+  F.k = fistScale(F, M.pts, cfg);
+  if (M.weapon) {
+    // Where the handle comes out of the top of the fist (the thumb's side): along the line the
+    // moves hold it at, through the grip, the farthest of the fist's points close to that line.
+    const pm = V3(F.palm).projectOnPlane(fore).normalize(), tm = fore.clone().cross(pm), c = (cfg.cock || 35) * Math.PI / 180;
+    const d = fore.clone().multiplyScalar(Math.cos(c)).addScaledVector(tm, Math.sin(c)), wd = cfg.fistWidth / F.k, [gf, gp, gt] = cfg.grip || [0, 0, 0];
+    const g = h.clone().addScaledVector(fore, gf * wd).addScaledVector(pm, gp * wd).addScaledVector(tm, gt * wd);
+    let top = 0;
+    for (const p of M.pts) { const v = p.clone().sub(g), a = v.dot(d); if (a > top && v.addScaledVector(d, -a).length() < 0.2 * wd) top = a; }
+    M.weapon.grip.fist = { at: g, top };
+  }
   // The models stop a little below the elbow; carry the sleeve on past the cut (where the
   // clip plane trims them) so a reaching arm never ends in mid-air.
   const c = h.clone().add(V3(F.elbow).sub(h).multiplyScalar(0.8));
@@ -814,18 +849,6 @@ async function loadFused(F, cfg) {
   // Forearm and upper arm (unit tubes, sized each frame), balls at the elbow and the wrist.
   M.sleeves = [new THREE.Mesh(new THREE.CylinderGeometry(1.06, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen), new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 1, 24, 1, true), linen), new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14), linen)];
   for (const m of M.sleeves) m.castShadow = m.receiveShadow = true;
-  if (M.weapon) {
-    // The handle's axis just above the fist: its middle there and a little further up, from the
-    // model's points close to the line from the fist to the tip.
-    const w = V3(F.tip).sub(h).normalize(), d0 = 2.6 / F.k;
-    const mid = (d) => {
-      const c = h.clone().addScaledVector(w, d);
-      const near = M.pts.filter((p) => Math.abs(p.clone().sub(c).dot(w)) < 0.008 && p.clone().sub(c).projectOnPlane(w).length() < 0.07);
-      return near.length ? near.reduce((a, p) => a.add(p), new THREE.Vector3()).multiplyScalar(1 / near.length) : c;
-    };
-    const a = mid(d0), b = mid(d0 + 0.05);
-    M.spin = { at: a, dir: b.clone().sub(a).normalize().dot(w) > 0.7 ? b.clone().sub(a).normalize() : w };
-  }
   M.parts = [M.holder, M.hand.holder, ...(M.weapon ? [M.weapon.holder] : []), ...M.sleeves];
   M.F = F;
   return M;
@@ -950,4 +973,4 @@ window.orthoViews = async (url, px) => {
 };
 
 // For the motion viewer (tools/viewer/), which poses the same models the same way.
-export { THREE, LIGHT_VIEW, loadModel, poseAt, bindPose, worldBox, bones, SCRIPTS, applyScript, loadVillager, poseVillager, framePhase, loadFused, placeFused, loadMocap, mocapAt, mocapMove };
+export { weaponPoints, THREE, LIGHT_VIEW, loadModel, poseAt, bindPose, worldBox, bones, SCRIPTS, sampleScript, poleClearance, loadVillager, poseVillager, framePhase, loadFused, placeFused, loadMocap, mocapAt, mocapMove };

@@ -155,23 +155,29 @@ export function sampleMoves() {
 }
 
 // The arm-and-weapon models. Points read off each model (tools/model-views.js, or
-// window.fusedInfo): the elbow end, the middle of the fist and the weapon's tip; palm: which way
-// the palm faces, in the model (from tools/bake-viewmodel.js --calibrate). mirror: the model came
-// out as a left hand. items: what the game uses it for (game/js/game/viewmodel.js). spin:
-// degrees to turn the weapon's head or blade about its handle, above the fist, where the model
-// holds it facing sideways.
+// window.fusedInfo): the elbow end, the middle of the fist and the weapon's tip (for an axe or a
+// mace, the top of the haft, under the head, so the haft and not a corner of the head stands
+// upright); palm: which way the palm faces, in the model: across the blade and its guard (or an
+// axe's head), on the side that shows the palm, so the hand sits as the club's does and the edge
+// faces where the knuckles do. mirror: the model came out as a left hand. items: what the game
+// uses it for (game/js/game/viewmodel.js). spin: degrees to turn the weapon's head or blade
+// about its handle, for models that came out holding it facing the wrong way (the axe, edge
+// back), cut from the rest at spinAxis[0], about the handle's axis through spinAxis[0] and [1].
 const T = (id, n = 1) => `/assets/tripo/${id}/model-${n}.glb`;
 export const FUSED = {
   empty: { url: T('fp-empty'), move: 'punch', items: ['Bare fists'], elbow: [0.005, -0.317, 0.031], hand: [0, 0.37, -0.03], palm: [1, 0, 0] },
   club: { url: T('fp-club', 2), move: 'swing', items: ['Wooden Club'], mirror: true, elbow: [0, -0.45, 0.04], hand: [-0.02, -0.08, -0.04], tip: [0.004, 0.5, 0.043], palm: [0, -0.211, -0.977] },
-  hammer: { url: T('fp-hammer'), move: 'swing', items: ["Apprentice's Hammer"], mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25], palm: [-0.973, -0.166, 0.159] },
+  hammer: { url: T('fp-hammer'), move: 'swing', items: ["Apprentice's Hammer"], mirror: true, elbow: [0.09, -0.37, 0.32], hand: [-0.06, 0.09, -0.12], tip: [-0.14, 0.36, -0.25], palm: [0.973, 0.166, -0.159] },
   knife: { url: T('fp-knife'), move: 'swing', items: ['Fishing Knife'], elbow: [0.09, -0.458, -0.126], hand: [-0.009, -0.044, 0.083], tip: [-0.223, 0.489, 0.286], palm: [0.978, 0.186, 0.094] },
-  dagger: { url: T('fp-dagger'), move: 'swing', items: ['Iron Dagger'], elbow: [0.026, -0.475, -0.018], hand: [-0.003, 0.058, 0.053], tip: [-0.005, 0.492, 0.052], palm: [0, -0.132, 0.991] },
-  rusty_dagger: { url: T('fp-rusty-dagger'), move: 'swing', items: ['Rusty Dagger'], elbow: [0.129, -0.435, -0.009], hand: [0.0, -0.12, 0.003], tip: [-0.237, 0.5, 0.011], palm: [0, -0.038, 0.999] },
-  longsword: { url: T('fp-longsword'), move: 'swing', items: ['Steel Longsword'], elbow: [0.021, -0.435, 0.45], hand: [0.021, -0.173, -0.197], tip: [-0.105, 0.478, -0.299], palm: [-1, 0, 0] },
-  sword: { url: T('fp-sword', 3), move: 'swing', items: ['Iron Shortsword', "Bram's Old Sword"], elbow: [0.013, -0.476, 0.001], hand: [-0.043, 0.055, 0.006], tip: [-0.127, 0.493, -0.027], palm: [0, -0.009, 1] },
-  axe: { url: T('fp-axe'), move: 'swing', items: ['Iron War Axe'], elbow: [-0.013, -0.441, -0.141], hand: [0.011, -0.163, 0.013], tip: [0.03, 0.472, 0.289], palm: [0, -0.485, 0.875] },
-  mace: { url: T('fp-mace'), move: 'swing', items: ['Iron Mace'], elbow: [0.049, -0.376, 0.028], hand: [0.001, 0.065, -0.022], tip: [-0.151, 0.481, 0.02], palm: [0, 0.113, 0.994] },
+  dagger: { url: T('fp-dagger'), move: 'swing', items: ['Iron Dagger'], elbow: [0.026, -0.475, -0.018], hand: [-0.003, 0.058, 0.053], tip: [-0.005, 0.492, 0.052], palm: [1, 0.005, 0.013] },
+  rusty_dagger: { url: T('fp-rusty-dagger'), move: 'swing', items: ['Rusty Dagger'], elbow: [0.129, -0.435, -0.009], hand: [0.0, -0.12, 0.003], tip: [-0.237, 0.5, 0.011], palm: [0.934, 0.357, -0.012] },
+  longsword: { url: T('fp-longsword'), move: 'swing', items: ['Steel Longsword'], mirror: true, elbow: [0.021, -0.435, 0.45], hand: [0.021, -0.173, -0.197], tip: [-0.105, 0.478, -0.299], palm: [0.979, 0.197, 0.048] },
+  sword: { url: T('fp-sword', 3), move: 'swing', items: ['Iron Shortsword', "Bram's Old Sword"], elbow: [0.013, -0.476, 0.001], hand: [-0.043, 0.055, 0.006], tip: [-0.127, 0.493, -0.027], palm: [0.981, 0.19, 0.026] },
+  axe: { url: T('fp-axe'), move: 'swing', items: ['Iron War Axe'], elbow: [-0.013, -0.441, -0.141], hand: [0.025, 0.001, 0.153], tip: [0.02, 0.46, 0.168], palm: [1, -0.023, -0.015], spin: 180, spinAxis: [[0.032, 0.121, 0.162], [0.02, 0.244, 0.171]] },
+  mace: { url: T('fp-mace'), move: 'swing', items: ['Iron Mace'], elbow: [0.049, -0.376, 0.028], hand: [0.001, 0.065, -0.022], tip: [-0.05, 0.414, -0.035], palm: [-0.684, -0.178, -0.708] },
 };
 // The baker's scale and lighting, which the viewer matches.
-export const ARM = { fistWidth: 4, shoulder: SHOULDER, light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.75, dither: 10 } };
+// fist: the hand every weapon is held in (the bare fist, straight on the forearm); grip: where a
+// handle runs through it, from the fist's middle: forward, out of the palm, towards the thumb, in
+// fist widths; cock: the handle's angle to the forearm (towards the thumb), as the moves pose it.
+export const ARM = { fistWidth: 4, shoulder: SHOULDER, fist: FUSED.empty, grip: [0, 0, 0], cock: COCK, light: { ambient: 1.1, key: 2.6, fill: 0.5, edge: 0.75, dither: 10 } };
